@@ -1,0 +1,237 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven {
+            url "http://xbib.org/repository"
+        }
+    }
+    dependencies {
+        classpath 'org.freemarker:freemarker:2.3.23'
+        classpath 'org.pegdown:pegdown:1.5.0'
+        classpath 'org.asciidoctor:asciidoctorj:1.5.1'
+        classpath 'org.xbib.gradle.plugin:jbake-gradle-plugin:1.0.0'
+        classpath 'org.ajoberstar:gradle-git:1.4.2'
+        classpath 'co.riiid:gradle-github-plugin:0.4.2'
+        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+
+println "Host: " + java.net.InetAddress.getLocalHost()
+println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
+println "Build: group: '${project.group}', name: '${project.name}', version: '${project.version}'"
+println "Timestamp: " + java.time.Instant.now().atZone(java.time.ZoneId.systemDefault()).toString()
+
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'co.riiid.gradle'
+apply plugin: 'org.xbib.gradle.jbake'
+apply plugin: 'org.ajoberstar.github-pages'
+
+// for web browser testing
+import org.apache.tools.ant.taskdefs.condition.Os
+
+ext {
+    user = 'xbib'
+    name = 'groovy-webapp-library-search-services'
+    description = 'Library search services as a Groovy Web app'
+    mainClassname = 'org.xbib.webapp.bootstrap.Bootstrap'
+    scmUrl = 'https://github.com/' + user + '/' + name
+    scmConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
+    scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
+    versions = [
+      'groovy-webapp' : '1.0.0',
+      'xbib': '2.0.0',
+      'xerces' : '2.11.0',
+      'xalan' : '2.7.2',
+      'woodstox' : '5.0.2',
+      'junit' : '4.12',
+      'geb': '0.13.1',
+      'selenium': '2.52.0',
+      'chrome': '2.10',
+      'phantomJs':  '1.9.7'
+    ]
+    drivers = ["firefox", "chrome", "phantomJs"]
+}
+apply from: "gradle/downloads.gradle"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven {
+        url "http://xbib.org/repository"
+    }
+}
+
+sourceSets {
+    integrationTest {
+        groovy {
+            srcDir file('src/integration-test/groovy')
+            compileClasspath += main.output + test.output
+        }
+        resources {
+            srcDir file('src/integration-test/resources')
+        }
+    }
+}
+
+configurations {
+    wagon
+    integrationTestCompile {
+        extendsFrom testCompile
+    }
+    integrationTestRuntime {
+        extendsFrom testRuntime
+    }
+}
+
+dependencies {
+    compile 'org.xbib.groovy:groovy-webapp-platform:' + versions.'groovy-webapp'
+    compile 'com.fasterxml.woodstox:woodstox-core:' + versions.woodstox
+    compile 'xerces:xercesImpl:' + versions.xerces
+    compile 'xalan:xalan:' + versions.xalan
+    testCompile 'junit:junit:' + versions.junit
+    testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    integrationTestCompile "org.gebish:geb-junit4:" + versions.geb
+    integrationTestCompile 'org.seleniumhq.selenium:selenium-chrome-driver:' + versions.selenium
+    integrationTestCompile 'org.seleniumhq.selenium:selenium-firefox-driver:' + versions.selenium
+    integrationTestCompile("com.codeborne:phantomjsdriver:1.2.1") {
+        // phantomjs driver pulls in a different selenium version
+        transitive = false
+    }
+    wagon 'org.apache.maven.wagon:wagon-ssh-external:2.10'
+}
+
+['cql','xml'].each { name ->
+    dependencies {
+        compile (group: 'org.xbib', name: name, version: versions.xbib) {
+            changing = true
+        }
+    }
+}
+
+compileGroovy {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(GroovyCompile) {
+    groovyOptions.optimizationOptions.indy = true
+}
+
+test {
+    systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
+    testLogging {
+        showStandardStreams = false
+        exceptionFormat = 'full'
+    }
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = configurations.integrationTestCompile
+    classpath += sourceSets.main.output
+    classpath += sourceSets.test.output
+    classpath += sourceSets.integrationTest.output
+    outputs.upToDateWhen { false }
+    systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
+    systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
+    systemProperty 'webapp.server', 'http://127.0.0.1:9500'
+}
+
+drivers.each { driver ->
+    task "${driver}IntegrationTest"(type: Test, dependsOn: ['unpackPlugin']) {
+        testClassesDir = sourceSets.integrationTest.output.classesDir
+        classpath = configurations.integrationTestCompile
+        classpath += sourceSets.main.output
+        classpath += sourceSets.test.output
+        classpath += sourceSets.integrationTest.output
+        outputs.upToDateWhen { false }
+        systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
+        reports {
+            junitXml.destination = file("$buildDir/test-results/${driver}")
+        }
+        systemProperty 'geb.build.reportsDir', reporting.file("${driver}/geb")
+        systemProperty 'geb.env', driver
+        testLogging.showStandardStreams = false
+    }
+}
+
+tasks.withType(Test) {
+    reports.html.destination = file("${reporting.baseDir}/${name}")
+}
+
+integrationTest.mustRunAfter test
+check.dependsOn integrationTest
+
+firefoxIntegrationTest {
+    mustRunAfter test
+}
+
+chromeIntegrationTest {
+    mustRunAfter test
+    dependsOn unzipChromeDriver
+    def chromedriverFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "chromedriver.exe" : "chromedriver"
+    systemProperty "webdriver.chrome.driver", new File(unzipChromeDriver.outputs.files.singleFile, chromedriverFilename).absolutePath
+}
+
+phantomJsIntegrationTest {
+    mustRunAfter test
+    dependsOn unzipPhantomJs
+    def phantomJsFilename = Os.isFamily(Os.FAMILY_WINDOWS) ? "phantomjs.exe" : "bin/phantomjs"
+    systemProperty "phantomjs.binary.path", new File(unzipPhantomJs.outputs.files.singleFile, phantomJsFilename).absolutePath
+}
+
+clean {
+    delete 'logs'
+    delete 'sessions'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+shadowJar {
+    baseName = project.name
+    version = project.version
+    classifier = 'standalone'
+    manifest {
+        attributes 'Main-Class': 'org.xbib.webapp.bootstrap.Bootstrap'
+    }
+}
+
+artifacts {
+    archives sourcesJar, shadowJar
+}
+
+if (project.hasProperty('signing.keyId')) {
+    signing {
+        sign configurations.archives
+    }
+}
+
+ext.grgit = org.ajoberstar.grgit.Grgit.open()
+
+apply from: 'gradle/git.gradle'
+apply from: 'gradle/publish.gradle'
+
+githubPages {
+    repoUri = 'git@github.com:xbib/groovy-webapp.git'
+    targetBranch = "gh-pages"
+    pages {
+        from(file('build/jbake')) {
+            into '.'
+        }
+    }
+}
+
+

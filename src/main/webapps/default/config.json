@@ -1,0 +1,247 @@
+{
+    "webapp": {
+      "uri": [
+        "http://127.0.0.1:9500/"
+      ],
+      "template" : {
+        "locale" : "de-DE"
+      },
+      "handler" : {
+        "requestlogger" : {
+          "type": "org.xbib.webapp.logging.RequestLogHandler"
+        },
+        "accesslogger" : {
+          "type": "org.xbib.webapp.logging.CombinedAccessLogHandler"
+        }
+      },
+      "mapper": {
+        "mapper1": {
+          "type": "org.xbib.webapp.resource.MarkupTemplateMapper",
+          "script": "lp/index.tpl",
+          "path": "/lp/{base_region}/"
+        },
+        "mapper2": {
+          "type": "org.xbib.webapp.resource.MarkupTemplateMapper",
+          "script": "lp/json.tpl",
+          "path": "/lp/json/{base_region}/"
+        },
+        "mapper3": {
+          "type": "org.xbib.webapp.resource.MarkupTemplateMapper",
+          "script": "lp/xml.tpl",
+          "path": "/lp/json/{base_region}/"
+        },
+        "mapper4": {
+          "type": "org.xbib.webapp.resource.MarkupTemplateMapper",
+          "script": "sru/index.tpl",
+          "path": [
+            "/sru/{index}/",
+            "/sru/{index}",
+            "/sru"
+          ]
+        },
+        "mapper5": {
+          "type": "org.xbib.webapp.resource.MarkupTemplateMapper",
+          "script": "fl/index.tpl",
+          "path": [
+            "/fl/key/{key}"
+          ]
+        }
+      },
+      "sessions": {
+        "enabled": true,
+        "cookies": {
+          "path": "/"
+        }
+      },
+      "logging": {
+        "access": {
+          "enabled": false
+        },
+        "request": {
+          "enabled": false
+        }
+      },
+      "index": {
+        "creation": {
+          "enabled": false,
+          "timestamp" : {
+            "enabled": false
+          }
+        }
+      }
+  },
+  "library": {
+    "router": {
+      "index": {
+        "name": "ezdb",
+        "type": {
+          "holdings": "holdings",
+          "shelf": "shelf",
+          "services": "services"
+        }
+      },
+      "regions": {
+        "BAW": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "BAW",
+            "BAY",
+            "NRW",
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "THU",
+            "HES",
+            "BER"
+          ]
+        },
+        "BAY": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "BAY",
+            "NRW",
+            "BAW",
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "THU",
+            "HES",
+            "BER"
+          ]
+        },
+        "BER": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "BER",
+            "BAY",
+            "NRW",
+            "BAW",
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "THU",
+            "HES"
+          ]
+        },
+        "HAM": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "HAM",
+            "SAX",
+            "NIE",
+            "SAA",
+            "THU",
+            "BER",
+            "BAY",
+            "NRW",
+            "BAW",
+            "HES"
+          ]
+        },
+        "HES": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "HES",
+            "BAY",
+            "NRW",
+            "BAW",
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "THU",
+            "BER"
+          ]
+        },
+        "NIE": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "NIE",
+            "SAX",
+            "HAM",
+            "SAA",
+            "THU",
+            "BAY",
+            "NRW",
+            "BAW",
+            "HES",
+            "BER"
+          ]
+        },
+        "NRW": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "NRW",
+            "BAY",
+            "BAW",
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "THU",
+            "HES",
+            "BER"
+          ]
+        },
+        "SAA": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "SAA",
+            "THU",
+            "SAX",
+            "NIE",
+            "HAM",
+            "BAY",
+            "NRW",
+            "BAW",
+            "HES",
+            "BER"
+          ]
+        },
+        "SAX": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "THU",
+            "BAY",
+            "NRW",
+            "BAW",
+            "HES",
+            "BER"
+          ]
+        },
+        "THU": {
+          "priority": [],
+          "servicerestrictions": {},
+          "regions": [
+            "THU",
+            "SAX",
+            "NIE",
+            "HAM",
+            "SAA",
+            "BAY",
+            "NRW",
+            "BAW",
+            "HES",
+            "BER"
+          ]
+        }
+      }
+    }
+  }
+}
