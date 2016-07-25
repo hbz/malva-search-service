@@ -98,6 +98,10 @@ class RouterExtension implements WebappExtension, RouterParameters {
         XmlXContent.contentBuilder().map(map).string()
     }
 
+    String formatGroup(List<Map> groups) {
+        groups.collect { formatGroup(it) }.join(',')
+    }
+
     String formatGroup(Map group) {
         if (group.enddate) {
             if (group.endvolume) {
