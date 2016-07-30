@@ -11,6 +11,7 @@
 /.gradle
 /build
 /plugins
+/sessions
 src/main/webapp/*config*
 src/integration-test/resources/*config*
 *~

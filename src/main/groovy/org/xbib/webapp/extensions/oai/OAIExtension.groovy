@@ -1,5 +1,7 @@
 package org.xbib.webapp.extensions.oai
 
+import com.google.inject.Inject
+import com.google.inject.assistedinject.Assisted
 import groovy.util.logging.Log4j2
 import org.elasticsearch.client.ElasticsearchClient
 import org.xbib.common.settings.Settings
@@ -14,16 +16,22 @@ import java.time.format.DateTimeFormatter
 @Log4j2
 class OAIExtension implements WebappExtension, OAIConstants {
 
-    Settings settings
+    private final String name
+
+    private final Settings settings
 
     ElasticsearchClient client
 
     OAIService oaiService
 
-    @Override
-    void webapp(Webapp webapp) {
+    @Inject
+    OAIExtension(@Assisted String name,
+                 @Assisted Settings settings,
+                 @Assisted Webapp webapp) {
+        this.name = name
+        this.settings = settings
         this.client = webapp.webappService().elasticsearchService().client()
-        this.oaiService = new OAIService(webapp.settings(), this.client)
+        this.oaiService = new OAIService(settings, this.client)
         log.info('OAI extension started')
     }
 
@@ -33,7 +41,7 @@ class OAIExtension implements WebappExtension, OAIConstants {
 
     @Override
     String name() {
-        'oai'
+        name
     }
 
     @Override

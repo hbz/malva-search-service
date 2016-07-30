@@ -1,5 +1,7 @@
 package org.xbib.webapp.extensions.sru
 
+import com.google.inject.Inject
+import com.google.inject.assistedinject.Assisted
 import groovy.util.logging.Log4j2
 import org.elasticsearch.client.ElasticsearchClient
 import org.xbib.common.settings.Settings
@@ -11,15 +13,20 @@ import org.xbib.webapp.WebappExtension
 @Log4j2
 class SRUExtension implements WebappExtension, SRUConstants {
 
-    Settings settings
+    private final String name
+
+    private final Settings settings
 
     ElasticsearchClient client
 
     SRUService sruService
 
-    @Override
-    void webapp(Webapp webapp) {
-        this.settings = webapp.settings()
+    @Inject
+    SRUExtension(@Assisted String name,
+                    @Assisted Settings settings,
+                    @Assisted Webapp webapp) {
+        this.name = name
+        this.settings = settings
         this.client =  webapp.webappService().elasticsearchService().client()
         this.sruService = new SRUService(settings, this.client)
         log.info('SRU extension started')
@@ -35,7 +42,7 @@ class SRUExtension implements WebappExtension, SRUConstants {
 
     @Override
     String name() {
-        'sru'
+        name
     }
 
     @Override

@@ -1,7 +1,7 @@
 {
     "webapp": {
       "uri": [
-        "http://127.0.0.1:9500/"
+        "http://localhost:9500/"
       ],
       "template" : {
         "locale" : "de-DE"

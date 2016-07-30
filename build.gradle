@@ -144,7 +144,7 @@ task integrationTest(type: Test) {
     outputs.upToDateWhen { false }
     systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
     systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
-    systemProperty 'webapp.server', 'http://127.0.0.1:9500'
+    systemProperty 'webapp.server', 'http://localhost:9500'
 }
 
 drivers.each { driver ->
