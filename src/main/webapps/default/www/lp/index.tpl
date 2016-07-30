@@ -154,7 +154,7 @@ html(lang: 'en') {
         div(class: 'row') {
           div(class: 'col-md-12') {
             vars.".result".results.each { res ->
-              h3 stringOf { res.titlecomponents.join(' ; ') }
+              h3 stringOf { res.titlecomponents ? res.titlecomponents.join(' ; ') : '(Kein Titel)' }
               if (res.firstdate) {
                 p "$res.publishedat $res.publishedby (${res.firstdate} - ${res.lastdate?:''})"
               }
