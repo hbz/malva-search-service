@@ -1,25 +1,8 @@
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        jcenter()
-        maven {
-            url "http://xbib.org/repository"
-        }
-    }
-    dependencies {
-        classpath 'org.freemarker:freemarker:2.3.23'
-        classpath 'org.pegdown:pegdown:1.5.0'
-        classpath 'org.asciidoctor:asciidoctorj:1.5.1'
-        classpath 'org.xbib.gradle.plugin:jbake-gradle-plugin:1.0.0'
-        classpath 'org.ajoberstar:gradle-git:1.4.2'
-        classpath 'co.riiid:gradle-github-plugin:0.4.2'
-        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
-    }
-}
-
 plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id "org.sonarqube" version "2.1-rc1"
+    id 'org.ajoberstar.github-pages' version '1.6.0-rc.1'
+    id "org.xbib.gradle.plugin.jbake" version "1.1.0"
 }
 
 println "Host: " + java.net.InetAddress.getLocalHost()
@@ -30,10 +13,13 @@ println "Timestamp: " + java.time.Instant.now().atZone(java.time.ZoneId.systemDe
 apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'findbugs'
+apply plugin: 'pmd'
+apply plugin: 'checkstyle'
+apply plugin: 'jacoco'
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'co.riiid.gradle'
-apply plugin: 'org.xbib.gradle.jbake'
 apply plugin: 'org.ajoberstar.github-pages'
+apply plugin: 'org.xbib.gradle.plugin.jbake'
 
 // for web browser testing
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -68,6 +54,9 @@ repositories {
     jcenter()
     maven {
         url "http://xbib.org/repository"
+    }
+    maven {
+        url "http://repo.gradle.org/gradle/repo"
     }
 }
 
@@ -190,6 +179,50 @@ phantomJsIntegrationTest {
     systemProperty "phantomjs.binary.path", new File(unzipPhantomJs.outputs.files.singleFile, phantomJsFilename).absolutePath
 }
 
+
+tasks.withType(Checkstyle) {
+    ignoreFailures = true
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+tasks.withType(Pmd) {
+    ignoreFailures = true
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+tasks.withType(FindBugs) {
+    ignoreFailures = true
+    reports {
+        xml.enabled = true
+        html.enabled = false
+    }
+}
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        csv.enabled false
+        xml.destination "${buildDir}/reports/jacoco-xml"
+        html.destination "${buildDir}/reports/jacoco-html"
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectName", "xbib Webapp platform"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.language", "grvy"
+        property "sonar.sources", "src/main/groovy"
+        property "sonar.tests", "src/test/groovy"
+        property "sonar.scm.provider", "git"
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.junit.reportsPath", "build/test-results/test/"
+    }
+}
+
 clean {
     delete 'logs'
     delete 'sessions'
@@ -223,15 +256,5 @@ ext.grgit = org.ajoberstar.grgit.Grgit.open()
 
 apply from: 'gradle/git.gradle'
 apply from: 'gradle/publish.gradle'
-
-githubPages {
-    repoUri = 'git@github.com:xbib/groovy-webapp.git'
-    targetBranch = "gh-pages"
-    pages {
-        from(file('build/jbake')) {
-            into '.'
-        }
-    }
-}
 
 

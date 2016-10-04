@@ -10,7 +10,7 @@ import org.xbib.common.xcontent.xml.XmlXContent
 import org.xbib.webapp.Webapp
 import org.xbib.webapp.WebappBinding
 import org.xbib.webapp.WebappExtension
-import org.xbib.webapp.MultiMap
+import org.xbib.util.MultiMap
 
 import static org.xbib.common.xcontent.XContentService.jsonBuilder
 

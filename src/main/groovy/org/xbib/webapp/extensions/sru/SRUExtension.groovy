@@ -5,10 +5,10 @@ import com.google.inject.assistedinject.Assisted
 import groovy.util.logging.Log4j2
 import org.elasticsearch.client.ElasticsearchClient
 import org.xbib.common.settings.Settings
-import org.xbib.webapp.MultiMap
 import org.xbib.webapp.Webapp
 import org.xbib.webapp.WebappBinding
 import org.xbib.webapp.WebappExtension
+import org.xbib.util.MultiMap
 
 @Log4j2
 class SRUExtension implements WebappExtension, SRUConstants {
