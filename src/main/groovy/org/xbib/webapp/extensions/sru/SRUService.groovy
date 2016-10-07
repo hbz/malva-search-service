@@ -21,15 +21,15 @@ import org.elasticsearch.search.aggregations.Aggregation
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms
 import org.elasticsearch.search.aggregations.bucket.terms.Terms
-import org.xbib.common.settings.Settings
-import org.xbib.common.xcontent.XContentBuilder
-import org.xbib.common.xcontent.json.JsonXContent
-import org.xbib.common.xcontent.xml.XmlXContent
-import org.xbib.common.xcontent.xml.XmlXParams
+import org.xbib.content.settings.Settings
+import org.xbib.content.XContentBuilder
+import org.xbib.content.json.JsonXContent
+import org.xbib.content.xml.XmlXContent
+import org.xbib.content.xml.XmlXParams
 import org.xbib.webapp.Constants
 import org.xbib.util.PathUriResolver
-import org.xbib.xml.XMLUtil
-import org.xbib.xml.namespace.XmlNamespaceContext
+import org.xbib.content.xml.util.XMLUtil
+import org.xbib.content.xml.XmlNamespaceContext
 
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLInputFactory
@@ -46,7 +46,7 @@ import javax.xml.transform.stream.StreamResult
 import javax.xml.transform.stream.StreamSource
 import java.nio.file.Paths
 
-import static org.xbib.common.xcontent.XContentService.jsonBuilder
+import static org.xbib.content.json.JsonXContent.contentBuilder
 
 @Log4j2
 class SRUService implements Constants {
@@ -88,7 +88,7 @@ class SRUService implements Constants {
     Map<String,Object> searchRetrieve(String endpoint,
                           SearchRetrieveRequest searchRetrieveRequest,
                           XContentBuilder builder, boolean xml) throws Exception {
-        XContentBuilder logmsg = jsonBuilder()
+        XContentBuilder logmsg = contentBuilder()
         logmsg.startObject()
                 .field("type", "request")
                 .field("endpoint", endpoint)
@@ -105,7 +105,7 @@ class SRUService implements Constants {
         String elasticsearchQuery = searchRetrieveRequest.getElasticsearchQuery()
         searchRequestBuilder.setExtraSource(elasticsearchQuery)
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(15000L)
-        logmsg = jsonBuilder()
+        logmsg = contentBuilder()
         logmsg.startObject()
                 .field("type", "response")
                 .field("endpoint", endpoint)
@@ -120,11 +120,11 @@ class SRUService implements Constants {
                 .endObject()
         log.info("{}", logmsg.string())
         if (builder == null) {
-            builder = jsonBuilder()
+            builder = contentBuilder()
         }
         String body = buildResponse(builder, endpoint, xml,
                 searchRetrieveRequest, searchResponse, "identifier", endpoint)
-        JsonXContent.jsonXContent.createParser(body).mapOrderedAndClose()
+        JsonXContent.jsonContent().createParser(body).mapOrderedAndClose()
     }
 
     private String buildResponse(XContentBuilder builder, String index, boolean xml,
@@ -176,7 +176,7 @@ class SRUService implements Constants {
             }
             builder.endArray()
             if (!logmsgs.isEmpty()) {
-                XContentBuilder logBuilder = jsonBuilder()
+                XContentBuilder logBuilder = contentBuilder()
                 logBuilder.startObject()
                 logBuilder.field("type", "related")
                 logBuilder.field("index", index)
@@ -271,7 +271,7 @@ class SRUService implements Constants {
                 took += searchResponse.tookInMillis
                 for (SearchHit hit : hits) {
                     XmlXParams holdingsXmlXParams = new XmlXParams(holdings, xmlXParams.namespaceContext, xmlFactory)
-                    XContentBuilder hitBuilder = xml ? XmlXContent.contentBuilder(holdingsXmlXParams) : jsonBuilder()
+                    XContentBuilder hitBuilder = xml ? XmlXContent.contentBuilder(holdingsXmlXParams) : contentBuilder()
                     hitBuilder.startObject()
                     hitBuilder.field("index", hit.getIndex())
                     hitBuilder.field("type", hit.getType())
@@ -295,7 +295,7 @@ class SRUService implements Constants {
             if (open) {
                 builder.endArray()
             }
-            XContentBuilder logBuilder = jsonBuilder()
+            XContentBuilder logBuilder = contentBuilder()
             logBuilder.startObject()
                     .field("index", relatedHitIndex)
                     .field("uid", uid)

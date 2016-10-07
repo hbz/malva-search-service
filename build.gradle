@@ -84,6 +84,7 @@ configurations {
 
 dependencies {
     compile 'org.xbib.groovy:groovy-webapp-platform:' + versions.'groovy-webapp'
+    compile "org.xbib:content-xml:1.0.0"
     compile 'com.fasterxml.woodstox:woodstox-core:' + versions.woodstox
     compile 'xerces:xercesImpl:' + versions.xerces
     compile 'xalan:xalan:' + versions.xalan
@@ -99,7 +100,7 @@ dependencies {
     wagon 'org.apache.maven.wagon:wagon-ssh-external:2.10'
 }
 
-['cql','xml'].each { name ->
+['cql'].each { name ->
     dependencies {
         compile (group: 'org.xbib', name: name, version: versions.xbib) {
             changing = true

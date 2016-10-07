@@ -16,14 +16,14 @@ import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.SearchHit
 import org.elasticsearch.search.sort.SortBuilders
 import org.elasticsearch.search.sort.SortOrder
-import org.xbib.common.settings.Settings
-import org.xbib.common.xcontent.XContentBuilder
-import org.xbib.common.xcontent.json.JsonXContent
-import org.xbib.common.xcontent.xml.XmlXContent
-import org.xbib.common.xcontent.xml.XmlXParams
+import org.xbib.content.settings.Settings
+import org.xbib.content.XContentBuilder
+import org.xbib.content.json.JsonXContent
+import org.xbib.content.xml.XmlXContent
+import org.xbib.content.xml.XmlXParams
+import org.xbib.content.xml.XmlNamespaceContext
 import org.xbib.webapp.Constants
 import org.xbib.util.PathUriResolver
-import org.xbib.xml.namespace.XmlNamespaceContext
 
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLInputFactory
@@ -61,7 +61,7 @@ class OAIService {
         this.settings = settings
         this.client = client
         this.transformerFactory = createTransformerFactory() as SAXTransformerFactory
-        URI uri = URI.create(settings.get(Constants.WEBAPP_HOME_PARAMETER))
+        URI uri = URI.create(settings.get(Constants.HOME_PARAMETER))
         URIResolver uriResolver = new PathUriResolver(Paths.get(uri))
         transformerFactory.setURIResolver(uriResolver)
         this.source = new QName(NS_URI, "source")

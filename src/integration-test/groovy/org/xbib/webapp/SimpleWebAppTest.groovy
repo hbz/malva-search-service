@@ -3,11 +3,11 @@ package org.xbib.webapp
 import geb.Browser
 import geb.Page
 import org.junit.Test
-import org.xbib.common.settings.Settings
-import org.xbib.common.settings.loader.SettingsLoaderFactory
+import org.xbib.content.settings.Settings
+import org.xbib.content.settings.SettingsLoaderService
 import org.xbib.webapp.bootstrap.WebappServer
 
-import static org.xbib.common.settings.Settings.settingsBuilder
+import static org.xbib.content.settings.Settings.settingsBuilder
 
 class RootPage extends Page {
     static url = '/'
@@ -21,9 +21,9 @@ class SimpleWebAppTest {
 
     @Test
     void simpleWebappTest() {
-        InputStream inputStream = getClass().getResourceAsStream('/test-config.yml')
+        InputStream inputStream = getClass().getResourceAsStream('/test-config.json')
         Settings settings = settingsBuilder()
-                .put(SettingsLoaderFactory.loaderFromResource('.yml').load(inputStream.text))
+                .put(SettingsLoaderService.loaderFromResource('.json').load(inputStream.text))
                 .replacePropertyPlaceholders()
                 .build()
         WebappServer webappServer = new WebappServer()

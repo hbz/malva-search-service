@@ -2,7 +2,7 @@ package org.xbib.webapp.extensions.sru
 
 import groovy.util.logging.Log4j2
 import org.junit.Test
-import org.xbib.common.settings.Settings
+import org.xbib.content.settings.Settings
 import org.xbib.webapp.bootstrap.WebappServer
 import org.xbib.webapp.request.path.PathDecoder
 

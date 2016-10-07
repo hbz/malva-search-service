@@ -1,7 +1,7 @@
 package org.xbib.webapp.extensions.sru
 
 import groovy.transform.builder.Builder
-import org.xbib.common.xcontent.XContentBuilder
+import org.xbib.content.XContentBuilder
 import org.xbib.query.cql.CQLParser
 import org.xbib.query.cql.elasticsearch.ElasticsearchQueryGenerator
 

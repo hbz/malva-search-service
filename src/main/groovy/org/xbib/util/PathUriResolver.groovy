@@ -22,8 +22,6 @@ class PathUriResolver implements URIResolver {
             URI uri = URI.create(href)
             if (!uri.isAbsolute() && base != null) {
                 s = new URI(base).resolve(href).getRawSchemeSpecificPart()
-                //url = new URL(new URL(base), href)
-                //s = url.toURI().getRawSchemeSpecificPart()
             }
         } catch (MalformedURLException | URISyntaxException e) {
             throw new TransformerException(e)

@@ -2,7 +2,7 @@ package org.xbib.webapp.extensions.router
 
 import groovy.transform.builder.Builder
 import groovy.util.logging.Log4j2
-import org.xbib.common.settings.Settings
+import org.xbib.content.settings.Settings
 
 @Builder
 @Log4j2

@@ -4,15 +4,14 @@ import com.google.inject.Inject
 import com.google.inject.assistedinject.Assisted
 import groovy.util.logging.Log4j2
 import org.elasticsearch.client.ElasticsearchClient
-import org.xbib.common.Strings
-import org.xbib.common.settings.Settings
-import org.xbib.common.xcontent.xml.XmlXContent
+import org.xbib.content.settings.Settings
+import org.xbib.content.xml.XmlXContent
 import org.xbib.webapp.Webapp
 import org.xbib.webapp.WebappBinding
 import org.xbib.webapp.WebappExtension
 import org.xbib.util.MultiMap
 
-import static org.xbib.common.xcontent.XContentService.jsonBuilder
+import static org.xbib.content.json.JsonXContent.contentBuilder
 
 @Log4j2
 class RouterExtension implements WebappExtension, RouterParameters {
@@ -98,7 +97,7 @@ class RouterExtension implements WebappExtension, RouterParameters {
     }
 
     String asJson(Map<String,Object> map) {
-        jsonBuilder().map(map).string()
+        contentBuilder().map(map).string()
     }
 
     String asXml(Map<String,Object> map) {
