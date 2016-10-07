@@ -3,7 +3,7 @@ package org.xbib.webapp.extensions.oai
 import groovy.transform.builder.Builder
 
 @Builder
-class GetRecordRequest {
+class GetRecordRequest extends OAIRequest {
 
     String path
 

@@ -10,7 +10,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery
 
 @Builder
-class ListRecordsRequest {
+class ListRecordsRequest extends OAIRequest {
 
     String path
 

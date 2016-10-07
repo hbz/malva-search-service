@@ -41,7 +41,7 @@ import javax.xml.transform.stream.StreamSource
 import java.nio.file.Paths
 import java.time.Instant
 
-import static org.xbib.common.xcontent.XContentService.jsonBuilder
+import static org.xbib.content.json.JsonXContent.contentBuilder
 
 class OAIService {
 
@@ -75,11 +75,11 @@ class OAIService {
                 .addSort(SortBuilders.fieldSort("_timestamp").order(SortOrder.ASC))
                 .addField('_timestamp')
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(15000L)
-        XContentBuilder builder = jsonBuilder()
+        XContentBuilder builder = contentBuilder()
         if (searchResponse.hits.hits.length == 1) {
             builder.field("earliesttimestamp", searchResponse.hits.hits[0].field('_timestamp').value)
         }
-        JsonXContent.jsonXContent.createParser(builder.string()).mapOrderedAndClose()
+        JsonXContent.jsonContent().createParser(builder.string()).mapOrderedAndClose()
     }
 
     Map<String,Object> getRecord(String endpoint, GetRecordRequest getRecordRequest) throws Exception {
@@ -88,19 +88,19 @@ class OAIService {
                 .setQuery(QueryBuilders.termQuery('_uid', getRecordRequest.type + '#' + getRecordRequest.id))
                 .setSize(1)
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(15000L)
-        XContentBuilder builder = jsonBuilder()
+        XContentBuilder builder = contentBuilder()
         if (searchResponse.hits.hits.length == 1) {
             buildResponse(builder, getRecordRequest, searchResponse, "identifier", endpoint)
         } else {
             throw new OAIException('idDoesNotExist')
         }
-        JsonXContent.jsonXContent.createParser(builder.string()).mapOrderedAndClose()
+        JsonXContent.jsonContent().createParser(builder.string()).mapOrderedAndClose()
     }
 
     Map<String,Object> listIdentifiers(String endpoint, ListIdentifiersRequest listIdentifiersRequest) throws Exception {
         SearchResponse searchResponse
         int scrollSize = settings.getAsInt("scrollsize", 1000)
-        long scrollMillis = settings.getAsTime("scrolltimeout", org.xbib.common.unit.TimeValue.timeValueSeconds(60)).millis()
+        long scrollMillis = settings.getAsTime("scrolltimeout", org.xbib.content.util.unit.TimeValue.timeValueSeconds(60)).millis()
         if (listIdentifiersRequest.resumptionToken == null) {
             ResumptionToken resumptionToken = ResumptionToken.newToken()
             listIdentifiersRequest.setResumptionToken(resumptionToken)
@@ -123,7 +123,7 @@ class OAIService {
         listIdentifiersRequest.resumptionToken.setSearchResponse(searchResponse)
         listIdentifiersRequest.resumptionToken.setExpireAt(Instant.now().plusSeconds(60))
         listIdentifiersRequest.resumptionToken.setCompleteListSize(searchResponse.hits.totalHits)
-        XContentBuilder builder = jsonBuilder()
+        XContentBuilder builder = contentBuilder()
         builder.startObject()
         buildResponseIdentifiers(builder, searchResponse)
         builder.startObject("resumptiontoken")
@@ -133,13 +133,13 @@ class OAIService {
                 .field('cursor', listIdentifiersRequest.resumptionToken.cursor)
                 .endObject()
         builder.endObject()
-        JsonXContent.jsonXContent.createParser(builder.string()).mapOrderedAndClose()
+        JsonXContent.jsonContent().createParser(builder.string()).mapOrderedAndClose()
     }
 
     Map<String,Object> listRecords(String endpoint, ListRecordsRequest listRecordsRequest) throws Exception {
         SearchResponse searchResponse
         int scrollSize = settings.getAsInt("scrollsize", 1000)
-        long scrollMillis = settings.getAsTime("scrolltimeout", org.xbib.common.unit.TimeValue.timeValueSeconds(60)).millis()
+        long scrollMillis = settings.getAsTime("scrolltimeout", org.xbib.content.util.unit.TimeValue.timeValueSeconds(60)).millis()
         if (listRecordsRequest.resumptionToken == null) {
             ResumptionToken resumptionToken = ResumptionToken.newToken()
             listRecordsRequest.setResumptionToken(resumptionToken)
@@ -159,7 +159,7 @@ class OAIService {
                     .execute().actionGet()
             listRecordsRequest.resumptionToken.setSearchResponse(searchResponse)
         }
-        XContentBuilder builder = jsonBuilder()
+        XContentBuilder builder = contentBuilder()
         builder.startObject()
         buildResponse(builder, listRecordsRequest, searchResponse, "identifier", endpoint)
         builder.startObject("resumptiontoken")
@@ -169,18 +169,18 @@ class OAIService {
                 .field('cursor', listRecordsRequest.resumptionToken.cursor)
                 .endObject()
         builder.endObject()
-        JsonXContent.jsonXContent.createParser(builder.string()).mapOrderedAndClose()
+        JsonXContent.jsonContent().createParser(builder.string()).mapOrderedAndClose()
     }
 
 
     Map<String,Object> listMetadataFormats(String endpoint, ListMetadataFormatsRequest listMetadataFormatsRequest) throws Exception {
-        XContentBuilder builder = jsonBuilder()
-        JsonXContent.jsonXContent.createParser(builder.string()).mapOrderedAndClose()
+        XContentBuilder builder = contentBuilder()
+        JsonXContent.jsonContent().createParser(builder.string()).mapOrderedAndClose()
     }
 
     Map<String,Object> listSets(String endpoint, ListSetsRequest listMetadataFormatsRequest) throws Exception {
-        XContentBuilder builder = jsonBuilder()
-        JsonXContent.jsonXContent.createParser(builder.string()).mapOrderedAndClose()
+        XContentBuilder builder = contentBuilder()
+        JsonXContent.jsonContent().createParser(builder.string()).mapOrderedAndClose()
     }
 
     private static void buildResponseIdentifiers(XContentBuilder builder, SearchResponse response) throws Exception {
@@ -200,8 +200,7 @@ class OAIService {
         }
     }
 
-    private void buildResponse(XContentBuilder builder,
-                                 OAIRequest request, SearchResponse response,
+    private void buildResponse(XContentBuilder builder, OAIRequest request, SearchResponse response,
                                  String key, String... values) throws Exception {
         long total = response.hits.totalHits
         builder.field("total", total)
