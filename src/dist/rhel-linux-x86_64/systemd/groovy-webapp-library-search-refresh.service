@@ -1,0 +1,7 @@
+[Unit]
+Description=Restart Groovy web app Library Search service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/systemctl stop groovy-webapp-library-search
+ExecStart=/usr/bin/systemctl start groovy-webapp-library-search

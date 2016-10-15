@@ -1,0 +1,98 @@
+
+task rhelBinCopy(type: Copy) {
+    group = 'linux'
+    from 'src/dist/rhel-linux-x86_64/bin'
+    into 'build/tmp/dist/rhel-linux-x86_64/bin'
+    expand([
+            'alpn': [
+                    'lib': "alpn-boot-${versions.alpnboot}.jar"
+            ]
+    ])
+}
+
+def rhelDistCopySpec = copySpec {
+    into(project.name + '-' + project.version) {
+        into('bin') {
+            fileMode 0550
+            from 'build/tmp/dist/rhel-linux-x86_64/bin'
+        }
+        into('lib') {
+            from 'src/dist/rhel-linux-x86_64/lib'
+            from configurations.distJars
+            // we have indy
+            exclude 'groovy-all-2.4.7.jar'
+        }
+        into('lib') {
+            from libsDir
+            include project.name + '-' + project.version + '.jar'
+        }
+        into('etc') {
+            from 'src/dist/rhel-linux-x86_64/etc/'+project.name+'-tar.options'
+            rename { String filename -> project.name + '.options' }
+        }
+        into('var/lib/groovy-webapp') {
+            from 'src/main/webapps'
+        }
+    }
+}
+
+task rhelDistTar(type: Tar, dependsOn: ['jar','rhelBinCopy']) {
+    group = 'linux'
+    compression Compression.GZIP
+    extension 'tar.gz'
+    with rhelDistCopySpec
+}
+
+task rhelRpm(type: Rpm, dependsOn: ['jar', 'rhelBinCopy']) {
+    group = 'linux'
+    packageName project.name
+    version project.version
+    release '1'
+    arch X86_64
+    os LINUX
+    license 'Apache License 2.0'
+    packager 'Jörg Prante < joergprante@gmail.com>'
+    vendor 'xbib'
+    description 'Groovy web application PDF service'
+    url 'https://github.com/xbib/' + project.name
+    user 'webapp'
+    preInstall file('src/dist/rpm/preInstall.sh')
+    postInstall file('src/dist/rpm/postInstall.sh')
+    preUninstall file('src/dist/rpm/preUninstall.sh')
+    postUninstall file('src/dist/rpm/postUninstall.sh')
+    into('/usr/bin') {
+        addParentDirs = false
+        fileMode 0550
+        from 'build/tmp/dist/rhel-linux-x86_64/bin'
+    }
+    into('/usr/share') {
+        addParentDirs = false
+        into(project.name + '-' + project.version) {
+            into('lib') {
+                from 'src/dist/rhel-linux-x86_64/lib'
+                from configurations.distJars
+                // we have indy
+                exclude 'groovy-all-2.4.7.jar'
+            }
+            into('lib') {
+                from libsDir
+                include project.name + '-' + project.version + '.jar'
+            }
+        }
+    }
+    into('/etc') {
+        addParentDirs = false
+        from 'src/dist/rhel-linux-x86_64/etc/' + project.name + '-rpm.options'
+        rename { String filename -> project.name + '.options' }
+    }
+    from('src/dist/rhel-linux-x86_64/systemd') {
+        addParentDirs = false
+        into '/etc/systemd/system'
+    }
+    from('src/main/webapps') {
+        addParentDirs = false
+        createDirectoryEntry = true
+        into '/var/lib/' + project.name
+    }
+    link('/usr/share/' + project.name, '/usr/share/' + project.name + '-' + project.version)
+}

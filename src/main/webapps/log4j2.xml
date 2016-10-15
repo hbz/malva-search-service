@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="OFF">
+    <appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
+        </Console>
+        <File name="File" fileName="${sys:log4j2path}" immediateFlush="true" append="true">
+            <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
+        </File>
+    </appenders>
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="File" />
+        </Root>
+    </Loggers>
+</configuration>

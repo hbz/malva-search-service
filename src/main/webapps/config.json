@@ -1,0 +1,27 @@
+{
+  "webapp": {
+    "home": "${webapp.home}",
+    "networkclass": "ANY",
+    "uri": "${webapp.server}",
+    "bind": {
+      "uri" : "${webapp.bind}"
+    },
+    "publish" : {
+      "uri" : "${webapp.publish}"
+    }
+  },
+  "elasticsearch" : {
+    "enabled" : true,
+    "transport" : {
+      "enabled" : true,
+      "path" : {
+        "home" : "."
+      },
+      "cluster" : "zbn",
+      "host" : [ "zephyros:9300", "boreas:9300", "notos:9300" ],
+      "settings" : {
+        "network.host" : "localhost"
+      }
+    }
+  }
+}

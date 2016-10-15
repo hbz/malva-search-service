@@ -1,0 +1,13 @@
+[Unit]
+Description=Groovy-based Web app Library Search
+After=network.target
+
+[Service]
+Type=simple
+User=webapp
+EnvironmentFile=-/etc/sysconfig/groovy-webapp-library-search
+ExecStart=/usr/bin/groovy-webapp-library-search
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

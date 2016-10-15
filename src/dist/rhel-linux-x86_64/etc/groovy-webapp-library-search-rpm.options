@@ -1,0 +1,16 @@
+-Xmx2g
+-XX:+UseG1GC
+-XX:+PrintGCDetails
+-XX:+PrintGCDateStamps
+-XX:+PrintGCTimeStamps
+-XX:+PrintAdaptiveSizePolicy
+-Xloggc:/var/log/groovy-webapp-library-search/gc.log
+-Djava.security.egd=file:/dev/./urandom
+-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+-Dlog4j.configurationFile=/var/lib/groovy-webapp-library-search/log4j2.xml
+-Dlog4j2path=/var/log/groovy-webapp-library-search/webapp.log
+-Dlog4j.level=debug
+-Dwebapp.home=/var/lib/groovy-webapp-library-search
+-Dwebapp.server=http://localhost:9502
+-Dwebapp.bind=http://localhost:9502
+-Dwebapp.publish=http://localhost:9502

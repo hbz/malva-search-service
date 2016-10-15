@@ -3,6 +3,7 @@ plugins {
     id "org.sonarqube" version "2.1-rc1"
     id 'org.ajoberstar.github-pages' version '1.6.0-rc.1'
     id "org.xbib.gradle.plugin.jbake" version "1.1.0"
+    id 'nebula.ospackage' version '4.0.0'
 }
 
 println "Host: " + java.net.InetAddress.getLocalHost()
@@ -20,29 +21,34 @@ apply plugin: 'jacoco'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.ajoberstar.github-pages'
 apply plugin: 'org.xbib.gradle.plugin.jbake'
+apply plugin: 'nebula.rpm'
 
 // for web browser testing
 import org.apache.tools.ant.taskdefs.condition.Os
 
 ext {
     user = 'xbib'
-    name = 'groovy-webapp-library-search-services'
-    description = 'Library search services as a Groovy Web app'
+    name = 'groovy-webapp-library-search'
+    description = 'Groovy Web app library search'
     mainClassname = 'org.xbib.webapp.bootstrap.Bootstrap'
     scmUrl = 'https://github.com/' + user + '/' + name
     scmConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     versions = [
-      'groovy-webapp' : '1.0.0',
-      'xbib': '2.0.0',
-      'xerces' : '2.11.0',
-      'xalan' : '2.7.2',
-      'woodstox' : '5.0.2',
-      'junit' : '4.12',
-      'geb': '0.13.1',
-      'selenium': '2.52.0',
-      'chrome': '2.10',
-      'phantomJs':  '1.9.7'
+            'groovy': '2.4.7',
+            'groovy-webapp' : '1.0.0',
+            'xerces' : '2.11.0',
+            'xalan' : '2.7.2',
+            'woodstox' : '5.0.2',
+            'elasticsearch' : '2.2.1',
+            'netty': '4.1.4.Final',
+            'tcnative': '1.1.33.Fork19',
+            'alpnboot': '8.1.9.v20160720',
+            'junit' : '4.12',
+            'geb': '0.13.1',
+            'selenium': '2.52.0',
+            'chrome': '2.10',
+            'phantomJs':  '1.9.7'
     ]
     drivers = ["firefox", "chrome", "phantomJs"]
 }
@@ -73,7 +79,10 @@ sourceSets {
 }
 
 configurations {
+    provided
+    alpnboot
     wagon
+    distJars
     integrationTestCompile {
         extendsFrom testCompile
     }
@@ -83,8 +92,9 @@ configurations {
 }
 
 dependencies {
-    compile 'org.xbib.groovy:groovy-webapp-platform:' + versions.'groovy-webapp'
+    compile 'org.xbib.groovy:groovy-webapp:' + versions.'groovy-webapp'
     compile "org.xbib:content-xml:1.0.0"
+    compile "org.xbib:cql:2.0.0"
     compile 'com.fasterxml.woodstox:woodstox-core:' + versions.woodstox
     compile 'xerces:xercesImpl:' + versions.xerces
     compile 'xalan:xalan:' + versions.xalan
@@ -98,14 +108,42 @@ dependencies {
         transitive = false
     }
     wagon 'org.apache.maven.wagon:wagon-ssh-external:2.10'
-}
-
-['cql'].each { name ->
-    dependencies {
-        compile (group: 'org.xbib', name: name, version: versions.xbib) {
-            changing = true
+    // openssl native libs are optional and must be added to integration-test classpath separately
+    if ('os x' == org.gradle.internal.os.OperatingSystem.current().getFamilyName()) {
+        integrationTestCompile "io.netty:netty-tcnative:${versions.tcnative}:osx-x86_64"
+    }
+    if ('linux' == org.gradle.internal.os.OperatingSystem.current().getFamilyName()) {
+        if (new File("/etc/redhat-release").exists()) {
+            // use this for linking to libssl.so.10 (RHEL/Fedora/CentOS)
+            integrationTestCompile "io.netty:netty-tcnative:${versions.tcnative}:linux-x86_64-fedora"
+        } else {
+            // use this for linking to libssl.so.1.0.0
+            integrationTestCompile "io.netty:netty-tcnative:${versions.tcnative}:linux-x86_64"
         }
     }
+    alpnboot "org.mortbay.jetty.alpn:alpn-boot:${versions.alpnboot}"
+    distJars("org.elasticsearch:elasticsearch:${versions.elasticsearch}") {
+        // dependencies that are overriden by org.xbib deps
+        exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'com.fasterxml.jackson.dataformat'
+        exclude group: 'com.google.guava'
+        // dependencies that are not for client
+        exclude module: 'org.elasticsearch:securesm'
+        // we use log4j2, not log4j
+        exclude group: 'log4j'
+    }
+    // Elasticsearch add-ons
+    distJars 'com.vividsolutions:jts:1.13'
+    distJars 'com.github.spullara.mustache.java:compiler:0.8.13'
+    // indy
+    distJars "org.codehaus.groovy:groovy-all:${versions.groovy}:indy"
+    // exclude non-indy groovy (gradle flaw)
+    distJars("org.xbib.groovy:groovy-webapp:${versions.'groovy-webapp'}") {
+        exclude module: "org.codehaus.groovy:groovy-all:${versions.groovy}"
+    }
+    // netty 4.1 needs alpn for http/2
+    distJars "org.mortbay.jetty.alpn:alpn-boot:${versions.alpnboot}"
+
 }
 
 compileGroovy {
@@ -118,7 +156,6 @@ tasks.withType(GroovyCompile) {
 }
 
 test {
-    systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
     testLogging {
         showStandardStreams = false
         exceptionFormat = 'full'
@@ -126,6 +163,8 @@ test {
 }
 
 task integrationTest(type: Test) {
+    // note: bootstrapClasspath does not use /p (or /a)
+    jvmArgs "-Xbootclasspath/p:" + configurations.alpnboot.asPath
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = configurations.integrationTestCompile
     classpath += sourceSets.main.output
@@ -133,8 +172,12 @@ task integrationTest(type: Test) {
     classpath += sourceSets.integrationTest.output
     outputs.upToDateWhen { false }
     systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
-    systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
-    systemProperty 'webapp.server', 'http://localhost:9500'
+    systemProperty 'java.util.logging.manager','org.apache.logging.log4j.jul.LogManager'
+    systemProperty 'geb.build.baseUrl', 'http://localhost:9502'
+    systemProperty 'webapp.server', 'http://localhost:9502'
+    systemProperty 'webapp.bind', 'http://localhost:9502'
+    testLogging.showStandardStreams = true
+    //systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
 }
 
 drivers.each { driver ->
@@ -180,50 +223,6 @@ phantomJsIntegrationTest {
     systemProperty "phantomjs.binary.path", new File(unzipPhantomJs.outputs.files.singleFile, phantomJsFilename).absolutePath
 }
 
-
-tasks.withType(Checkstyle) {
-    ignoreFailures = true
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-}
-tasks.withType(Pmd) {
-    ignoreFailures = true
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-}
-tasks.withType(FindBugs) {
-    ignoreFailures = true
-    reports {
-        xml.enabled = true
-        html.enabled = false
-    }
-}
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        csv.enabled false
-        xml.destination "${buildDir}/reports/jacoco-xml"
-        html.destination "${buildDir}/reports/jacoco-html"
-    }
-}
-
-sonarqube {
-    properties {
-        property "sonar.projectName", "xbib Webapp platform"
-        property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.language", "grvy"
-        property "sonar.sources", "src/main/groovy"
-        property "sonar.tests", "src/test/groovy"
-        property "sonar.scm.provider", "git"
-        property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.junit.reportsPath", "build/test-results/test/"
-    }
-}
-
 clean {
     delete 'logs'
     delete 'sessions'
@@ -255,6 +254,8 @@ if (project.hasProperty('signing.keyId')) {
 
 ext.grgit = org.ajoberstar.grgit.Grgit.open()
 
+apply from: 'gradle/sonarqube.gradle'
+apply from: 'gradle/linux.gradle'
 apply from: 'gradle/git.gradle'
 apply from: 'gradle/publish.gradle'
 
