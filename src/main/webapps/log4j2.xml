@@ -4,13 +4,34 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
         </Console>
-        <File name="File" fileName="${sys:log4j2path}" immediateFlush="true" append="true">
+        <RollingFile name="RollingFile" fileName="${sys:log4j.path}/webapp.log" filePattern="${sys:log4j.path}/webapp-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
-        </File>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="ErrorRollingFile" fileName="${sys:log4j.path}/error.log" filePattern="${sys:log4j.path}/error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="AccessRollingFile" fileName="${sys:log4j.path}/access.log" filePattern="${sys:log4j.path}/access-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingFile>
     </appenders>
     <Loggers>
-        <Root level="debug">
-            <AppenderRef ref="File" />
+        <Root level="${sys:log4j.level}">
+            <AppenderRef ref="RollingFile" />
         </Root>
+        <Logger name="webapp.error" level="info">
+            <AppenderRef ref="ErrorRollingFile"/>
+        </Logger>
+        <Logger name="webapp.access" level="info">
+            <AppenderRef ref="AccessRollingFile"/>
+        </Logger>
     </Loggers>
 </configuration>

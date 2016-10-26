@@ -1,15 +1,26 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
-    id "org.sonarqube" version "2.1-rc1"
+    id "org.sonarqube" version "2.2"
     id 'org.ajoberstar.github-pages' version '1.6.0-rc.1'
     id "org.xbib.gradle.plugin.jbake" version "1.1.0"
     id 'nebula.ospackage' version '4.0.0'
 }
 
-println "Host: " + java.net.InetAddress.getLocalHost()
-println "Gradle: " + gradle.gradleVersion + " JVM: " + org.gradle.internal.jvm.Jvm.current() + " Groovy: " + GroovySystem.getVersion()
-println "Build: group: '${project.group}', name: '${project.name}', version: '${project.version}'"
-println "Timestamp: " + java.time.Instant.now().atZone(java.time.ZoneId.systemDefault()).toString()
+group = 'org.xbib.groovy'
+version = '1.0.0'
+
+printf "Host: %s\nOS: %s %s %s\nJVM: %s %s %s %s\nGroovy: %s\nGradle: %s\n" +
+        "Build: group: ${project.group} name: ${project.name} version: ${project.version}\n",
+        InetAddress.getLocalHost(),
+        System.getProperty("os.name"),
+        System.getProperty("os.arch"),
+        System.getProperty("os.version"),
+        System.getProperty("java.version"),
+        System.getProperty("java.vm.version"),
+        System.getProperty("java.vm.vendor"),
+        System.getProperty("java.vm.name"),
+        GroovySystem.getVersion(),
+        gradle.gradleVersion
 
 apply plugin: 'groovy'
 apply plugin: 'maven'
