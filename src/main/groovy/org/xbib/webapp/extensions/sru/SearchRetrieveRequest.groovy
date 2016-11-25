@@ -2,8 +2,8 @@ package org.xbib.webapp.extensions.sru
 
 import groovy.transform.builder.Builder
 import org.xbib.content.XContentBuilder
-import org.xbib.query.cql.CQLParser
-import org.xbib.query.cql.elasticsearch.ElasticsearchQueryGenerator
+import org.xbib.cql.CQLParser
+import org.xbib.cql.elasticsearch.ElasticsearchQueryGenerator
 
 /**
  * Contextual Query Language request for Elasticsearch

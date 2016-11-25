@@ -6,11 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlFactory
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator
 import groovy.util.logging.Log4j2
 import org.apache.xalan.processor.TransformerFactoryImpl
-import org.elasticsearch.action.search.SearchAction
-import org.elasticsearch.action.search.SearchRequestBuilder
-import org.elasticsearch.action.search.SearchResponse
-import org.elasticsearch.action.search.SearchScrollAction
-import org.elasticsearch.action.search.SearchScrollRequestBuilder
+import org.elasticsearch.action.search.*
 import org.elasticsearch.client.ElasticsearchClient
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.IndexNotFoundException
@@ -21,24 +17,20 @@ import org.elasticsearch.search.aggregations.Aggregation
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms
 import org.elasticsearch.search.aggregations.bucket.terms.Terms
-import org.xbib.content.settings.Settings
 import org.xbib.content.XContentBuilder
 import org.xbib.content.json.JsonXContent
+import org.xbib.content.resource.XmlNamespaceContext
+import org.xbib.content.settings.Settings
 import org.xbib.content.xml.XmlXContent
 import org.xbib.content.xml.XmlXParams
-import org.xbib.webapp.Constants
-import org.xbib.util.PathUriResolver
 import org.xbib.content.xml.util.XMLUtil
-import org.xbib.content.xml.XmlNamespaceContext
+import org.xbib.util.PathUriResolver
+import org.xbib.webapp.Constants
 
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLOutputFactory
-import javax.xml.transform.Result
-import javax.xml.transform.Templates
-import javax.xml.transform.TransformerException
-import javax.xml.transform.TransformerFactory
-import javax.xml.transform.URIResolver
+import javax.xml.transform.*
 import javax.xml.transform.sax.SAXResult
 import javax.xml.transform.sax.SAXTransformerFactory
 import javax.xml.transform.sax.TransformerHandler
@@ -48,6 +40,9 @@ import java.nio.file.Paths
 
 import static org.xbib.content.json.JsonXContent.contentBuilder
 
+/**
+ * SRU service.
+ */
 @Log4j2
 class SRUService implements Constants {
 
@@ -68,17 +63,10 @@ class SRUService implements Constants {
     SRUService(Settings settings, ElasticsearchClient client) {
         this.settings = settings
         this.client = client
-        this.transformerFactory = createTransformerFactory() as SAXTransformerFactory
-        if (settings.get(HOME_PARAMETER)) {
-            URI uri = URI.create(settings.get(HOME_PARAMETER))
-            URIResolver uriResolver = new PathUriResolver(Paths.get(uri))
-            transformerFactory.setURIResolver(uriResolver)
-        } else {
-            log.error('no webapp home found in settings: {}', settings.getAsMap())
-        }
         this.source = new QName(NS_URI, "source")
         this.holdings = new QName(NS_URI, "holdings")
         this.xmlFactory = createXmlFactory(createXMLInputFactory(), createXMLOutputFactory())
+        this.transformerFactory = createTransformerFactory(settings) as SAXTransformerFactory
     }
 
     Map<String,Object> searchRetrieve(String index, SearchRetrieveRequest searchRetrieveRequest, boolean xml) throws Exception {
@@ -100,6 +88,9 @@ class SRUService implements Constants {
                 .fieldIfNotNull("facetLimit", searchRetrieveRequest.facetLimit)
                 .endObject()
         log.info("{}", logmsg.string())
+        if (client == null) {
+            throw new IllegalStateException("no Elasticsearch client")
+        }
         SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client, SearchAction.INSTANCE)
         searchRequestBuilder.setIndices(endpoint)
         String elasticsearchQuery = searchRetrieveRequest.getElasticsearchQuery()
@@ -134,7 +125,7 @@ class SRUService implements Constants {
         long total = response.hits.totalHits
         builder.field("total", total)
         if (response.hits.hits != null) {
-            String relatedIndex = request.extraRequestData
+            String relatedIndex = request.extraRequestData ?: 'holdings'
             XmlNamespaceContext context = XmlNamespaceContext.newInstance()
             context.addNamespace("", NS_URI)
             XmlXParams xmlParams
@@ -153,8 +144,8 @@ class SRUService implements Constants {
                     .field("type", hit.getType())
                     .field("id", hit.getId())
                     .field("score", hit.getScore())
-                    .fieldIfNotNull("recordschema", request.recordSchema ?: '')
-                    .field("recordpacking", settings.get("plugins.sru.searchretrieve.recordPacking", "xml"))
+                    .fieldIfNotNull("recordschema", request.recordSchema ?: 'mods')
+                    .field("recordpacking", settings.get("webapp.sru.searchretrieve.recordPacking", "xml"))
                 if (xml) {
                     XContentBuilder xmlBuilder = XmlXContent.contentBuilder(xmlParams)
                     xmlBuilder.startObject()
@@ -425,8 +416,12 @@ class SRUService implements Constants {
         sw.toString()
     }
 
-    private static TransformerFactory createTransformerFactory() {
-        new TransformerFactoryImpl()
+    private static TransformerFactory createTransformerFactory(Settings settings) {
+        TransformerFactory transformerFactory = new TransformerFactoryImpl()
+        URI uri = URI.create(settings.get(HOME_URI_PARAMETER))
+        URIResolver uriResolver = new PathUriResolver(Paths.get(uri))
+        transformerFactory.setURIResolver(uriResolver)
+        transformerFactory
     }
 
     private static XmlFactory createXmlFactory(XMLInputFactory inputFactory, XMLOutputFactory outputFactory) {

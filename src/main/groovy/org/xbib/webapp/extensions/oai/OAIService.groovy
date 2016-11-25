@@ -16,12 +16,12 @@ import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.SearchHit
 import org.elasticsearch.search.sort.SortBuilders
 import org.elasticsearch.search.sort.SortOrder
+import org.xbib.content.resource.XmlNamespaceContext
 import org.xbib.content.settings.Settings
 import org.xbib.content.XContentBuilder
 import org.xbib.content.json.JsonXContent
 import org.xbib.content.xml.XmlXContent
 import org.xbib.content.xml.XmlXParams
-import org.xbib.content.xml.XmlNamespaceContext
 import org.xbib.webapp.Constants
 import org.xbib.util.PathUriResolver
 

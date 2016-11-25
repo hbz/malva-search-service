@@ -11,6 +11,7 @@
 -Dlog4j.path=/var/log/groovy-webapp-library-search
 -Dlog4j.level=debug
 -Dwebapp.home=/var/lib/groovy-webapp-library-search
--Dwebapp.server=http://localhost:9502
--Dwebapp.bind=http://localhost:9502
--Dwebapp.publish=http://localhost:9502
+-Delasticsearch.transport.cluster=hap
+-Delasticsearch.transport.host.0=10.3.2.81:9300
+-Delasticsearch.transport.host.1=10.3.2.83:9300
+-Delasticsearch.transport.host.2=10.3.2.85:9300

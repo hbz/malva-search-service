@@ -130,9 +130,7 @@
             <xsl:if test="es:identifierGND">
                 <xsl:attribute name="authority">gnd</xsl:attribute>
                 <xsl:attribute name="authorityURI">http://d-nb.info/gnd/</xsl:attribute>
-                <xsl:attribute name="valueURI">
-                    http://d-nb.info/gnd/<xsl:value-of select="es:identifierGND"/>
-                </xsl:attribute>
+                <xsl:attribute name="valueURI">http://d-nb.info/gnd/<xsl:value-of select="es:identifierGND"/></xsl:attribute>
             </xsl:if>
             <xsl:call-template name="personal">
                 <xsl:with-param name="p" select="."/>

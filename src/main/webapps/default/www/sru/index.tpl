@@ -1,9 +1,9 @@
+map = sru.execute(path, params, true)
 responseType = sru.responseType(params)
 version = sru.version(params)
 namespace = sru.namespace(version)
 schemaLocation = sru.schemaLocation(version)
-responseHeader."Content-Type" = "${responseType}; charset=utf-8"
-map = sru.execute(path, params, true)
+responseHeader."content-type" = "${responseType}; charset=utf-8"
 xmlDeclaration()
 'sru:searchRetrieveResponse'('xmlns:sru': namespace,
                              'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',

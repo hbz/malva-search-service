@@ -13,8 +13,8 @@ class RootPage extends Page {
     static url = '/'
 }
 
-class LicensePriorityPage extends Page {
-    static url = '/lp'
+class SRUPage extends Page {
+    static url = '/sru/hbz'
 }
 
 class SimpleWebAppTest {
@@ -32,8 +32,8 @@ class SimpleWebAppTest {
             Browser.drive {
                 to RootPage
                 assert page instanceof RootPage
-                to LicensePriorityPage
-                assert page instanceof LicensePriorityPage
+                to SRUPage
+                assert page instanceof SRUPage
                 Thread.sleep(3000L)
             }.quit()
         } finally {

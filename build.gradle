@@ -2,7 +2,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id "org.sonarqube" version "2.2"
     id 'org.ajoberstar.github-pages' version '1.6.0-rc.1'
-    id "org.xbib.gradle.plugin.jbake" version "1.1.0"
+    id "org.xbib.gradle.plugin.jbake" version "1.2.1"
     id 'nebula.ospackage' version '4.0.0'
 }
 
@@ -47,15 +47,10 @@ ext {
     scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     versions = [
             'groovy': '2.4.7',
-            'groovy-webapp' : '1.0.0',
-            'xerces' : '2.11.0',
-            'xalan' : '2.7.2',
-            'woodstox' : '5.0.2',
             'elasticsearch' : '2.2.1',
-            'netty': '4.1.4.Final',
-            'tcnative': '1.1.33.Fork19',
+            'tcnative': '1.1.33.Fork23',
             'alpnboot': '8.1.9.v20160720',
-            'junit' : '4.12',
+            'javassist': '3.20.0-GA',
             'geb': '0.13.1',
             'selenium': '2.52.0',
             'chrome': '2.10',
@@ -68,13 +63,6 @@ apply from: "gradle/downloads.gradle"
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
-    maven {
-        url "http://xbib.org/repository"
-    }
-    maven {
-        url "http://repo.gradle.org/gradle/repo"
-    }
 }
 
 sourceSets {
@@ -90,7 +78,6 @@ sourceSets {
 }
 
 configurations {
-    provided
     alpnboot
     wagon
     distJars
@@ -103,13 +90,13 @@ configurations {
 }
 
 dependencies {
-    compile 'org.xbib.groovy:groovy-webapp:' + versions.'groovy-webapp'
-    compile "org.xbib:content-xml:1.0.0"
-    compile "org.xbib:cql:2.0.0"
-    compile 'com.fasterxml.woodstox:woodstox-core:' + versions.woodstox
-    compile 'xerces:xercesImpl:' + versions.xerces
-    compile 'xalan:xalan:' + versions.xalan
-    testCompile 'junit:junit:' + versions.junit
+    compile 'org.xbib.groovy:groovy-webapp:1.0.0'
+    compile "org.xbib:cql:1.0.0"
+    compile "org.xbib:content-xml:1.0.6"
+    compile 'com.fasterxml.woodstox:woodstox-core:5.0.3'
+    compile 'xerces:xercesImpl:2.11.0'
+    compile 'xalan:xalan:2.7.2'
+    testCompile 'junit:junit:4.12'
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
     integrationTestCompile "org.gebish:geb-junit4:" + versions.geb
     integrationTestCompile 'org.seleniumhq.selenium:selenium-chrome-driver:' + versions.selenium
@@ -149,12 +136,19 @@ dependencies {
     // indy
     distJars "org.codehaus.groovy:groovy-all:${versions.groovy}:indy"
     // exclude non-indy groovy (gradle flaw)
-    distJars("org.xbib.groovy:groovy-webapp:${versions.'groovy-webapp'}") {
+    distJars("org.xbib.groovy:groovy-webapp:1.0.0") {
         exclude module: "org.codehaus.groovy:groovy-all:${versions.groovy}"
     }
+    // better netty performance
+    distJars "org.javassist:javassist:${versions.javassist}"
     // netty 4.1 needs alpn for http/2
     distJars "org.mortbay.jetty.alpn:alpn-boot:${versions.alpnboot}"
-
+    // additional packages for search service
+    distJars "org.xbib:cql:1.0.0"
+    distJars "org.xbib:content-xml:1.0.6"
+    distJars 'com.fasterxml.woodstox:woodstox-core:5.0.3'
+    distJars 'xerces:xercesImpl:2.11.0'
+    distJars 'xalan:xalan:2.7.2'
 }
 
 compileGroovy {
@@ -184,11 +178,10 @@ task integrationTest(type: Test) {
     outputs.upToDateWhen { false }
     systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
     systemProperty 'java.util.logging.manager','org.apache.logging.log4j.jul.LogManager'
-    systemProperty 'geb.build.baseUrl', 'http://localhost:9502'
-    systemProperty 'webapp.server', 'http://localhost:9502'
-    systemProperty 'webapp.bind', 'http://localhost:9502'
+    //systemProperty 'geb.build.baseUrl', 'http://localhost:9500'
+    systemProperty 'webapp.bind.uri', 'http://${net.hostname}:9500'
+    systemProperty 'webapp.publish.uri', 'http://${net.hostname}:9500'
     testLogging.showStandardStreams = true
-    //systemProperty 'path.fonts', projectDir.absolutePath + '/src/main/webapp/'
 }
 
 drivers.each { driver ->
@@ -263,11 +256,8 @@ if (project.hasProperty('signing.keyId')) {
     }
 }
 
-ext.grgit = org.ajoberstar.grgit.Grgit.open()
-
-apply from: 'gradle/sonarqube.gradle'
 apply from: 'gradle/linux.gradle'
-apply from: 'gradle/git.gradle'
 apply from: 'gradle/publish.gradle'
+apply from: 'gradle/sonarqube.gradle'
 
 

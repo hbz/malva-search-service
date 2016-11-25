@@ -10,6 +10,9 @@ import org.xbib.webapp.WebappBinding
 import org.xbib.webapp.WebappExtension
 import org.xbib.util.MultiMap
 
+/**
+ *
+ */
 @Log4j2
 class SRUExtension implements WebappExtension, SRUConstants {
 
@@ -28,7 +31,7 @@ class SRUExtension implements WebappExtension, SRUConstants {
         this.name = name
         this.settings = settings
         this.client =  webapp.webappService().elasticsearchService().client()
-        this.sruService = new SRUService(settings, this.client)
+        this.sruService = new SRUService(webapp.settings(), this.client)
         log.info('SRU extension started')
     }
 
@@ -60,7 +63,11 @@ class SRUExtension implements WebappExtension, SRUConstants {
     }
 
     static String recordSchema(MultiMap params) {
-        params.get(RECORD_SCHEMA_PARAMETER) as String
+        params.get(RECORD_SCHEMA_PARAMETER, 'mods') as String
+    }
+
+    static String extraRequestData(MultiMap params) {
+        params.get(EXTRA_REQUEST_DATA_PARAMETER, 'holdings') as String
     }
 
     static String responseType(MultiMap params) {
@@ -68,6 +75,7 @@ class SRUExtension implements WebappExtension, SRUConstants {
         String responseType = null
         switch (version) {
             case '1.1' :
+                // nothing found about SRU 1.1 response type
                 responseType = 'text/xml'
                 break
             case '1.2' :
@@ -134,10 +142,11 @@ class SRUExtension implements WebappExtension, SRUConstants {
                 .andfilter(params.findAll { it.key.toString()startsWith("filter.and.") })
                 .facetLimit(params.get(FACET_LIMIT_PARAMETER) as String)
                 .facetCount(params.get(FACET_COUNT_PARAMETER) as String)
-                .facetStart(params.get(FACET_START_PARAMETER) as String) // not supported
-                .facetSort(params.get(FACET_SORT_PARAMETER) as String) // not supported
+                .facetStart(params.get(FACET_START_PARAMETER) as String) // not supported yet
+                .facetSort(params.get(FACET_SORT_PARAMETER) as String) // not supported yet
                 .resultSetTTL(params.get(RESULT_SET_TTL_PARAMETER, 0) as Integer)
-                .extraRequestData(params.get(EXTRA_REQUEST_DATA_PARAMETER) as String)
+                .extraRequestData(extraRequestData(params))
+
         sruService.searchRetrieve(params.get('index', '_all') as String,
                 searchRetrieveRequestBuilder.build().validate(), xml)
     }
@@ -145,5 +154,4 @@ class SRUExtension implements WebappExtension, SRUConstants {
     Map<String,Object> execute(String path, SearchRetrieveRequest searchRetrieveRequest) {
         sruService.searchRetrieve(path, searchRetrieveRequest, true)
     }
-
 }
