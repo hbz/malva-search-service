@@ -179,7 +179,7 @@ class SRUService implements Constants {
             }
         }
         if (response.getAggregations() != null) {
-            String query = request.query
+            String query = request.cqlQuery
             builder.startArray('facets')
             for (Aggregation aggregation : response.getAggregations()) {
                 if (aggregation instanceof StringTerms) {
@@ -264,9 +264,9 @@ class SRUService implements Constants {
                     XmlXParams holdingsXmlXParams = new XmlXParams(holdings, xmlXParams.namespaceContext, xmlFactory)
                     XContentBuilder hitBuilder = xml ? XmlXContent.contentBuilder(holdingsXmlXParams) : contentBuilder()
                     hitBuilder.startObject()
-                    hitBuilder.field("index", hit.getIndex())
-                    hitBuilder.field("type", hit.getType())
-                    hitBuilder.field("id", hit.getId())
+                    hitBuilder.field("index", xml ? XMLUtil.escape(hit.getIndex()) : hit.getIndex())
+                    hitBuilder.field("type", xml ? XMLUtil.escape(hit.getType()) : hit.getType())
+                    hitBuilder.field("id", xml ? XMLUtil.escape(hit.getId()) : hit.getId())
                     hitBuilder.startObject("source")
                     // skip filtering if hit is "local" i.e. hit index looks like requested index
                     boolean isLocal = isLocal(hit.getIndex(), index)

@@ -19,7 +19,7 @@ xmlDeclaration()
           'sru:recordData' {
             yieldUnescaped "${rec.recorddata}"
           }
-          'sru:recordIdentifier' sru.normalizeIndexName(rec.index) + "/${rec.type}/${rec.id}"
+          'sru:recordIdentifier' sru.normalizeIndexName(rec.index) + "/${rec.type}/" + org.xbib.content.xml.util.XMLUtil.escape(rec.id)
         }
       }
     }
