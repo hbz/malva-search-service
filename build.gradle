@@ -170,7 +170,6 @@ task integrationTest(type: Test) {
     outputs.upToDateWhen { false }
     systemProperty 'log4j.configurationFile', projectDir.absolutePath + '/src/test/resources/log4j2.xml'
     systemProperty 'java.util.logging.manager','org.apache.logging.log4j.jul.LogManager'
-    //systemProperty 'geb.build.baseUrl', 'http://localhost:9500'
     systemProperty 'webapp.bind.uri', 'http://${net.hostname}:9500'
     systemProperty 'webapp.publish.uri', 'http://${net.hostname}:9500'
     testLogging.showStandardStreams = true

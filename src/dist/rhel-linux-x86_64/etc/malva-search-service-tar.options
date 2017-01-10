@@ -11,7 +11,6 @@
 -Dlog4j.path=${dir}/../var/log/malva-search-service
 -Dlog4j.level=debug
 -Dwebapp.home=${dir}/../var/lib/malva-search-service
--Dwebapp.server=http://${net:host}:9502
 -Delasticsearch.transport.cluster=hap
 -Delasticsearch.transport.host.0=10.3.2.81:9300
 -Delasticsearch.transport.host.1=10.3.2.82:9300
