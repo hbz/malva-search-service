@@ -6,6 +6,9 @@ import javax.xml.transform.stream.StreamSource
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ *
+ */
 class PathUriResolver implements URIResolver {
 
     private final Path root

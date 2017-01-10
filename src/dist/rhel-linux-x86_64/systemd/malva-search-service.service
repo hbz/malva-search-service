@@ -1,0 +1,13 @@
+[Unit]
+Description=Malva Search Service
+After=network.target
+
+[Service]
+Type=simple
+User=malva
+EnvironmentFile=-/etc/sysconfig/malva-search-service
+ExecStart=/usr/bin/malva-search-service
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

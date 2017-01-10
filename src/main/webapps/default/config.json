@@ -5,26 +5,48 @@
         "locale" : "de-DE"
       },
       "extension" : {
+        "elasticsearch" : {
+          "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension",
+          "enabled" : true,
+          "transport" : {
+            "enabled" : true,
+            "path" : {
+              "home" : "."
+            },
+            "cluster" : "elasticsearch",
+            "host" : [ "localhost" ],
+            "settings" : {
+              "network.host" : "localhost"
+            }
+          }
+        },
         "sru" : {
-          "type": "org.xbib.webapp.extensions.sru.SRUExtension"
+          "type": "org.xbib.malva.extensions.sru.SRUExtension"
+        },
+        "oai" : {
+          "type" : "org.xbib.malva.extensions.oai.OAIExtension"
         }
       },
       "handler" : {
         "requestlogger" : {
-          "type": "org.xbib.webapp.logging.RequestLogHandler"
+          "type": "org.xbib.malva.logging.RequestLogHandler"
         },
         "accesslogger" : {
-          "type": "org.xbib.webapp.logging.CombinedAccessLogHandler"
+          "type": "org.xbib.malva.logging.CombinedAccessLogHandler"
         }
       },
-      "mapper": {
-        "mapper1": {
-          "type": "org.xbib.webapp.resource.mapper.MarkupTemplateMapper",
-          "script": "sru/index.tpl",
-          "path": [
-            "/sru/{index}/",
-            "/sru/{index}"
-          ]
+      "mapper" : {
+        "gtpl" : {
+          "type" : "org.xbib.malva.resource.mapper.MarkupTemplateMapper"
+        }
+      },
+      "endpoint" : {
+        "/sru/{index}" : {
+          "template" : "sru/index.gtpl"
+        },
+        "/**" : {
+          "type": "org.xbib.malva.resource.endpoint.TemplateEndpoint",
+          "index-file" : ["index.gtpl", "index.stpl"]
         }
       },
       "sessions": {

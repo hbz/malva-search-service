@@ -1,0 +1,7 @@
+[Unit]
+Description=Restart Malva Search Service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/systemctl stop malva-search-service
+ExecStart=/usr/bin/systemctl start malva-search-service

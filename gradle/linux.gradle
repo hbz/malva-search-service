@@ -19,8 +19,6 @@ def rhelDistCopySpec = copySpec {
         into('lib') {
             from 'src/dist/rhel-linux-x86_64/lib'
             from configurations.distJars
-            // we have indy
-            exclude 'groovy-all-2.4.7.jar'
         }
         into('lib') {
             from libsDir
@@ -30,7 +28,7 @@ def rhelDistCopySpec = copySpec {
             from 'src/dist/rhel-linux-x86_64/etc/'+project.name+'-tar.options'
             rename { String filename -> project.name + '.options' }
         }
-        into('var/lib/groovy-webapp') {
+        into('var/lib/' + project.name) {
             from 'src/main/webapps'
         }
     }
@@ -53,9 +51,9 @@ task rhelRpm(type: Rpm, dependsOn: ['jar', 'rhelBinCopy']) {
     license 'Apache License 2.0'
     packager 'Jörg Prante < joergprante@gmail.com>'
     vendor 'xbib'
-    description 'Groovy web application PDF service'
-    url 'https://github.com/xbib/' + project.name
-    user 'webapp'
+    description  description
+    url 'https://github.com/' + user + '/' + project.name
+    user 'malva'
     preInstall file('src/dist/rpm/preInstall.sh')
     postInstall file('src/dist/rpm/postInstall.sh')
     preUninstall file('src/dist/rpm/preUninstall.sh')
@@ -71,8 +69,6 @@ task rhelRpm(type: Rpm, dependsOn: ['jar', 'rhelBinCopy']) {
             into('lib') {
                 from 'src/dist/rhel-linux-x86_64/lib'
                 from configurations.distJars
-                // we have indy
-                exclude 'groovy-all-2.4.7.jar'
             }
             into('lib') {
                 from libsDir

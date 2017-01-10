@@ -1,19 +1,5 @@
 {
   "webapp": {
     "networkclass": "ANY"
-  },
-  "elasticsearch" : {
-    "enabled" : true,
-    "transport" : {
-      "enabled" : true,
-      "path" : {
-        "home" : "."
-      },
-      "cluster" : "zbn",
-      "host" : [ "10.3.2.31:9300", "10.3.2.32:9300", "10.3.2.33:9300" ],
-      "settings" : {
-        "network.host" : "localhost"
-      }
-    }
   }
 }

@@ -1,6 +1,5 @@
 plugins {
     id "org.sonarqube" version "2.2"
-    id "org.xbib.gradle.plugin.jbake" version "1.2.1"
     id 'nebula.ospackage' version '4.0.0'
 }
 
@@ -24,7 +23,6 @@ apply plugin: 'findbugs'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'jacoco'
-apply plugin: 'org.xbib.gradle.plugin.jbake'
 apply plugin: 'nebula.rpm'
 
 // for web browser testing
@@ -32,18 +30,19 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 ext {
     user = 'xbib'
-    name = 'groovy-webapp-library-search'
-    description = 'Groovy Web app library search'
-    mainClassname = 'org.xbib.webapp.bootstrap.Bootstrap'
+    description = 'Malva search service with SRU, CQL'
     scmUrl = 'https://github.com/' + user + '/' + name
     scmConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     scmDeveloperConnection = 'scm:git:git://github.com/' + user + '/' + name + '.git'
     versions = [
             'groovy': '2.4.7',
+            'malva' : '1.0.0',
             'elasticsearch' : '2.2.1',
             'tcnative': '1.1.33.Fork23',
             'alpnboot': '8.1.9.v20160720',
             'javassist': '3.20.0-GA',
+            'junit' : '4.12',
+            'log4j' : '2.7',
             'geb': '0.13.1',
             'selenium': '2.52.0',
             'chrome': '2.10',
@@ -83,12 +82,15 @@ configurations {
 }
 
 dependencies {
-    compile 'org.xbib.groovy:groovy-webapp:1.0.0'
+    compile "org.xbib.malva:malva-elasticsearch:${versions.malva}"
     compile "org.xbib:cql:1.0.0"
-    compile "org.xbib:content-xml:1.0.6"
+    compile "org.xbib:content-xml:1.0.7"
     compile 'com.fasterxml.woodstox:woodstox-core:5.0.3'
     compile 'xerces:xercesImpl:2.11.0'
     compile 'xalan:xalan:2.7.2'
+    compileOnly "org.codehaus.groovy:groovy-all:${versions.groovy}"
+    testCompile "org.apache.logging.log4j:log4j-1.2-api:${versions.log4j}"
+    testCompile "org.apache.logging.log4j:log4j-jul:${versions.log4j}"
     testCompile 'junit:junit:4.12'
     testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
     integrationTestCompile "org.gebish:geb-junit4:" + versions.geb
@@ -128,17 +130,14 @@ dependencies {
     distJars 'com.github.spullara.mustache.java:compiler:0.8.13'
     // indy
     distJars "org.codehaus.groovy:groovy-all:${versions.groovy}:indy"
-    // exclude non-indy groovy (gradle flaw)
-    distJars("org.xbib.groovy:groovy-webapp:1.0.0") {
-        exclude module: "org.codehaus.groovy:groovy-all:${versions.groovy}"
-    }
+    distJars "org.xbib.malva:malva:${versions.malva}"
     // better netty performance
     distJars "org.javassist:javassist:${versions.javassist}"
     // netty 4.1 needs alpn for http/2
     distJars "org.mortbay.jetty.alpn:alpn-boot:${versions.alpnboot}"
     // additional packages for search service
     distJars "org.xbib:cql:1.0.0"
-    distJars "org.xbib:content-xml:1.0.6"
+    distJars "org.xbib:content-xml:1.0.7"
     distJars 'com.fasterxml.woodstox:woodstox-core:5.0.3'
     distJars 'xerces:xercesImpl:2.11.0'
     distJars 'xalan:xalan:2.7.2'
@@ -178,7 +177,7 @@ task integrationTest(type: Test) {
 }
 
 drivers.each { driver ->
-    task "${driver}IntegrationTest"(type: Test, dependsOn: ['unpackPlugin']) {
+    task "${driver}IntegrationTest"(type: Test, dependsOn: ['jar']) {
         testClassesDir = sourceSets.integrationTest.output.classesDir
         classpath = configurations.integrationTestCompile
         classpath += sourceSets.main.output
@@ -235,7 +234,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 groovydoc {
-    docTitle = 'Groovy Web Application Platform'
+    docTitle =  description
 }
 
 task groovydocJar(type: Jar, dependsOn: 'groovydoc') {

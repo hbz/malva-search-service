@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# This is the start script for Malva search service
+
+app="malva-search-service"
+
+dir="\$(cd -P "\$(dirname "\$0")" && pwd)"
+
+parse_server_options() {
+  if [ -f "\$1" ]; then
+    echo "\$(grep "^-" "\$1" | tr '\\n' ' ')"
+  fi
+}
+
+for server_options in \${dir}/../etc/\${app}.options /etc/\${app}.options  ; do
+    if [ -r "\$server_options" ]; then
+        SERVER_OPTIONS=\$server_options
+        break
+    fi
+done
+
+MALVA_SEARCH_SERVICE_OPTS="\$(parse_server_options "\$SERVER_OPTIONS") \$MALVA_SEARCH_SERVICE_OPTS"
+MALVA_SEARCH_SERVICE_OPTS=\$(eval "echo \$MALVA_SEARCH_SERVICE_OPTS")
+
+classpath=\${dir}/../lib/\\*:/usr/share/\${app}/lib/\\*
+
+startconf=/var/lib/\${app}/config.json
+if [ -d "\${dir}/../var/lib/\${app}" ] ; then
+  mkdir -p "\${dir}/../var/log/\${app}"
+  startconf=\${dir}/../var/lib/\${app}/config.json
+fi
+
+if [ -x "\$JAVA_HOME/bin/java" ]; then
+    JAVA="\$JAVA_HOME/bin/java"
+else
+    JAVA=`which java`
+fi
+if [ ! -x "\$JAVA" ]; then
+    echo "Could not find any executable java binary. Please install java in your PATH or set JAVA_HOME"
+    exit 1
+fi
+
+exec \${JAVA} \
+ -Xbootclasspath/p:/usr/share/\${app}/lib/${alpn.lib}:\${dir}/../lib/${alpn.lib} \
+ \${MALVA_SEARCH_SERVICE_OPTS} \
+ -classpath \${classpath} \
+ org.xbib.malva.bootstrap.Bootstrap \${startconf}
+retval=\$?
+exit \${retval}
