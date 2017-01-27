@@ -43,6 +43,9 @@ import java.time.Instant
 
 import static org.xbib.content.json.JsonXContent.contentBuilder
 
+/**
+ *
+ */
 class OAIService implements MalvaConstants {
 
     private final static NS_URI = "http://xbib.org/ns/oai/elasticsearch/source/1.0/"

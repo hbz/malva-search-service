@@ -96,7 +96,7 @@ class SRUExtension implements MalvaExtension, SRUConstants {
 
     Map<String,Object> execute(String path, SearchRetrieveRequest searchRetrieveRequest, boolean xml) {
         if (sruService == null) {
-            ElasticsearchClient client = elasticsearchService.client()
+            ElasticsearchClient client = elasticsearchService.resources.get(webapp).client
             log.info('the Elastiscearch client is: {}', client)
             this.sruService = new SRUService(webapp.settings(), client)
         }

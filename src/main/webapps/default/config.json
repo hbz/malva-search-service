@@ -6,25 +6,10 @@
       },
       "extension" : {
         "elasticsearch" : {
-          "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension",
-          "enabled" : true,
-          "transport" : {
-            "enabled" : true,
-            "path" : {
-              "home" : "."
-            },
-            "cluster" : "elasticsearch",
-            "host" : [ "localhost" ],
-            "settings" : {
-              "network.host" : "localhost"
-            }
-          }
+          "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension"
         },
         "sru" : {
           "type": "org.xbib.malva.extensions.sru.SRUExtension"
-        },
-        "oai" : {
-          "type" : "org.xbib.malva.extensions.oai.OAIExtension"
         }
       },
       "handler" : {
@@ -44,9 +29,12 @@
         "/sru/{index}" : {
           "template" : "sru/index.gtpl"
         },
+        "/sru/{index}/" : {
+          "template" : "sru/index.gtpl"
+        },
         "/**" : {
           "type": "org.xbib.malva.resource.endpoint.TemplateEndpoint",
-          "index-file" : ["index.gtpl", "index.stpl"]
+          "index-file" : ["index.gtpl"]
         }
       },
       "sessions": {

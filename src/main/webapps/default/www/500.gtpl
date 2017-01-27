@@ -4,19 +4,24 @@ html(lang:'en') {
     title('500 - Server error')
     meta(charset: 'utf-8')
     meta(name: 'viewport', content: 'width=device-width, initial-scale=1.0')
-    link(rel: 'stylesheet', href: stringOf { url('bower_components/bootstrap/dist/css/bootstrap.min.css') })
+    link(rel: 'stylesheet', href: stringOf { url('webjars/bootstrap/3.3.5/css/bootstrap.min.css') })
   }
   body {
     div(class: 'container') {
       h1('Server error')
-      p(class: 'responseStatus') {
-        yield "Status ${stringOf { responseStatus } }"
-      }
-      p(class: 'exception') {
-        yield "Exception ${stringOf { exception } }"
-      }
-      p(class: 'exceptionMessage') {
-        yield "Exception message ${stringOf { exceptionMessage } }"
+      div(class: 'alert alert-danger') {
+        p(class: 'responseStatus') {
+          strong "Status"
+          yield " ${stringOf { response.httpStatus } }"
+        }
+        p(class: 'exception') {
+          strong "Exception"
+          yield " ${stringOf { exception } }"
+        }
+        p(class: 'exceptionMessage') {
+          strong "Exception message"
+          yield " ${stringOf { exceptionMessage } }"
+        }
       }
       pre {
         code(class: 'trace') {

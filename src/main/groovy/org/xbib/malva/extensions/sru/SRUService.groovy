@@ -24,8 +24,8 @@ import org.xbib.content.settings.Settings
 import org.xbib.content.xml.XmlXContent
 import org.xbib.content.xml.XmlXParams
 import org.xbib.content.xml.util.XMLUtil
+import org.xbib.malva.MalvaConstants
 import org.xbib.util.PathUriResolver
-import org.xbib.malva.Constants
 
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLInputFactory
@@ -44,7 +44,7 @@ import static org.xbib.content.json.JsonXContent.contentBuilder
  * SRU service.
  */
 @Log4j2
-class SRUService implements Constants {
+class SRUService implements MalvaConstants {
 
     private final static NS_URI = "http://xbib.org/ns/sru/elasticsearch/source/1.0/";
 

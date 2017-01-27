@@ -10,6 +10,7 @@
 -Dlog4j.configurationFile=${dir}/../var/lib/malva-search-service/log4j2.xml
 -Dlog4j.path=${dir}/../var/log/malva-search-service
 -Dlog4j.level=debug
+-Dio.netty.recycler.maxCapacity=0
 -Dwebapp.home=${dir}/../var/lib/malva-search-service
 -Delasticsearch.transport.cluster=hap
 -Delasticsearch.transport.host.0=10.3.2.81:9300

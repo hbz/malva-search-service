@@ -83,7 +83,7 @@ configurations {
 
 dependencies {
     compile "org.xbib.malva:malva-elasticsearch:${versions.malva}"
-    compile "org.xbib:cql:1.0.0"
+    compile "org.xbib:cql:1.0.1"
     compile "org.xbib:content-xml:1.0.7"
     compile 'com.fasterxml.woodstox:woodstox-core:5.0.3'
     compile 'xerces:xercesImpl:2.11.0'
@@ -131,12 +131,13 @@ dependencies {
     // indy
     distJars "org.codehaus.groovy:groovy-all:${versions.groovy}:indy"
     distJars "org.xbib.malva:malva:${versions.malva}"
+    distJars "org.xbib.malva:malva-elasticsearch:${versions.malva}"
     // better netty performance
     distJars "org.javassist:javassist:${versions.javassist}"
     // netty 4.1 needs alpn for http/2
     distJars "org.mortbay.jetty.alpn:alpn-boot:${versions.alpnboot}"
     // additional packages for search service
-    distJars "org.xbib:cql:1.0.0"
+    distJars "org.xbib:cql:1.0.1"
     distJars "org.xbib:content-xml:1.0.7"
     distJars 'com.fasterxml.woodstox:woodstox-core:5.0.3'
     distJars 'xerces:xercesImpl:2.11.0'

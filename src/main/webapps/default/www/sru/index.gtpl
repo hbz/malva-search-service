@@ -3,7 +3,7 @@ responseType = sru.responseType(params)
 version = sru.version(params)
 namespace = sru.namespace(version)
 schemaLocation = sru.schemaLocation(version)
-responseHeader."content-type" = "${responseType}; charset=utf-8"
+response.headers."content-type" = "${responseType}; charset=utf-8"
 xmlDeclaration()
 'sru:searchRetrieveResponse'('xmlns:sru': namespace,
                              'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
