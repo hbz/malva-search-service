@@ -4,6 +4,7 @@ task rhelBinCopy(type: Copy) {
     from 'src/dist/rhel-linux-x86_64/bin'
     into 'build/tmp/dist/rhel-linux-x86_64/bin'
     expand([
+            'profile' : "${project.profile}",
             'alpn': [
                     'lib': "alpn-boot-${versions.alpnboot}.jar"
             ]
@@ -22,13 +23,13 @@ def rhelDistCopySpec = copySpec {
         }
         into('lib') {
             from libsDir
-            include project.name + '-' + project.version + '.jar'
+            include "${project.name}-${project.version}.jar"
         }
         into('etc') {
-            from 'src/dist/rhel-linux-x86_64/etc/'+project.name+'-tar.options'
-            rename { String filename -> project.name + '.options' }
+            from "src/dist/rhel-linux-x86_64/etc/${project.name}-${project.profile}-tar.options"
+            rename { String filename -> "${project.name}-${project.profile}.options" }
         }
-        into('var/lib/' + project.name) {
+        into("var/lib/${project.name}") {
             from 'src/main/webapps'
         }
     }
@@ -45,7 +46,7 @@ task rhelRpm(type: Rpm, dependsOn: ['jar', 'rhelBinCopy']) {
     group = 'linux'
     packageName project.name
     version project.version
-    release '1'
+    release "1.${project.profile}"
     arch X86_64
     os LINUX
     license 'Apache License 2.0'
@@ -78,8 +79,8 @@ task rhelRpm(type: Rpm, dependsOn: ['jar', 'rhelBinCopy']) {
     }
     into('/etc') {
         addParentDirs = false
-        from 'src/dist/rhel-linux-x86_64/etc/' + project.name + '-rpm.options'
-        rename { String filename -> project.name + '.options' }
+        from "src/dist/rhel-linux-x86_64/etc/${project.name}-${project.profile}-rpm.options"
+        rename { String filename -> "${project.name}-${project.profile}.options" }
     }
     from('src/dist/rhel-linux-x86_64/systemd') {
         addParentDirs = false

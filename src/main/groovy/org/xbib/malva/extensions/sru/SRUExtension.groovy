@@ -9,7 +9,7 @@ import org.xbib.malva.MalvaExtension
 import org.xbib.malva.MalvaBinding
 import org.xbib.malva.Webapp
 import org.xbib.malva.elasticsearch.ElasticsearchService
-import org.xbib.util.MultiMap
+import org.xbib.malva.util.MultiMap
 
 /**
  *

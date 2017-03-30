@@ -1,0 +1,63 @@
+{
+    "webapp": {
+      "uri": [ "http://${net.hostname}:9500/" ],
+      "template" : {
+        "locale" : "de-DE"
+      },
+      "extension" : {
+        "elasticsearch" : {
+          "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension"
+        },
+        "sru" : {
+          "type": "org.xbib.malva.extensions.sru.SRUExtension"
+        }
+      },
+      "handler" : {
+        "requestlogger" : {
+          "type": "org.xbib.malva.logging.RequestLogHandler"
+        },
+        "accesslogger" : {
+          "type": "org.xbib.malva.logging.CombinedAccessLogHandler"
+        }
+      },
+      "mapper" : {
+        "gtpl" : {
+          "type" : "org.xbib.malva.resource.mapper.MarkupTemplateMapper"
+        }
+      },
+      "endpoint" : {
+        "/sru/{index}" : {
+          "template" : "sru/index.gtpl"
+        },
+        "/sru/{index}/" : {
+          "template" : "sru/index.gtpl"
+        },
+        "/**" : {
+          "type": "org.xbib.malva.resource.endpoint.TemplateEndpoint",
+          "index-file" : ["index.gtpl"]
+        }
+      },
+      "sessions": {
+        "enabled": false,
+        "cookies": {
+          "path": "/"
+        }
+      },
+      "logging": {
+        "access": {
+          "enabled": true
+        },
+        "request": {
+          "enabled": true
+        }
+      },
+      "index": {
+        "creation": {
+          "enabled": false,
+          "timestamp" : {
+            "enabled": false
+          }
+        }
+      }
+  }
+}

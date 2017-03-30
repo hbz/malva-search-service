@@ -1,10 +1,12 @@
 package org.xbib.malva.extensions.sru
 
 import groovy.util.logging.Log4j2
+import org.junit.Ignore
+import org.junit.Test
 import org.xbib.content.settings.Settings
-import org.xbib.util.MultiMap
 import org.xbib.malva.bootstrap.WebappServer
 import org.xbib.malva.request.path.PathDecoder
+import org.xbib.malva.util.MultiMap
 
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
@@ -14,6 +16,8 @@ import java.util.concurrent.Executors
 @Log4j2
 class LoadTest {
 
+    @Ignore
+    @Test
     void testLoad() {
         WebappServer webappServer = new WebappServer()
         try {

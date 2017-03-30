@@ -1,12 +1,12 @@
 [Unit]
-Description=Malva Search Service
+Description=Malva Search Service %I
 After=network.target
 
 [Service]
 Type=simple
 User=malva
 EnvironmentFile=-/etc/sysconfig/malva-search-service
-ExecStart=/usr/bin/malva-search-service
+ExecStart=/usr/bin/malva-search-service %i
 Restart=on-abort
 
 [Install]

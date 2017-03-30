@@ -1,4 +1,4 @@
-map = sru.execute(path, params, true)
+map = sru.execute(request.path, params, true)
 responseType = sru.responseType(params)
 version = sru.version(params)
 namespace = sru.namespace(version)

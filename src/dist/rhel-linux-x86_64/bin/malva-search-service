@@ -3,6 +3,7 @@
 # This is the start script for Malva search service
 
 app="malva-search-service"
+profile=\${1:${profile}}
 
 dir="\$(cd -P "\$(dirname "\$0")" && pwd)"
 
@@ -12,7 +13,7 @@ parse_server_options() {
   fi
 }
 
-for server_options in \${dir}/../etc/\${app}.options /etc/\${app}.options  ; do
+for server_options in \${dir}/../etc/\${app}-\${profile}.options /etc/\${app}-\${profile}.options  ; do
     if [ -r "\$server_options" ]; then
         SERVER_OPTIONS=\$server_options
         break
@@ -24,10 +25,10 @@ MALVA_SEARCH_SERVICE_OPTS=\$(eval "echo \$MALVA_SEARCH_SERVICE_OPTS")
 
 classpath=\${dir}/../lib/\\*:/usr/share/\${app}/lib/\\*
 
-startconf=/var/lib/\${app}/config.json
+conf=/var/lib/\${app}/\${profile}.json
 if [ -d "\${dir}/../var/lib/\${app}" ] ; then
   mkdir -p "\${dir}/../var/log/\${app}"
-  startconf=\${dir}/../var/lib/\${app}/config.json
+  conf=\${dir}/../var/lib/\${app}/\${profile}.json
 fi
 
 if [ -x "\$JAVA_HOME/bin/java" ]; then
@@ -44,6 +45,6 @@ exec \${JAVA} \
  -Xbootclasspath/p:/usr/share/\${app}/lib/${alpn.lib}:\${dir}/../lib/${alpn.lib} \
  \${MALVA_SEARCH_SERVICE_OPTS} \
  -classpath \${classpath} \
- org.xbib.malva.bootstrap.Bootstrap \${startconf}
+ org.xbib.malva.bootstrap.Bootstrap \${conf}
 retval=\$?
 exit \${retval}

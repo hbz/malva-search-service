@@ -4,7 +4,7 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
         </Console>
-        <RollingFile name="RollingFile" fileName="${sys:log4j.path}/webapp.log" filePattern="${sys:log4j.path}/webapp-%d{yyyy-MM-dd}-%i.log.gz">
+        <RollingFile name="RollingFile" fileName="${sys:log4j.path}/${sys:webapp.profile}.log" filePattern="${sys:log4j.path}/${sys:webapp.profile}-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="[%d{DATE}][%-5p][%-25c][%t] %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true"/>

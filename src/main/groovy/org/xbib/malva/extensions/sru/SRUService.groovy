@@ -124,7 +124,7 @@ class SRUService implements MalvaConstants {
         builder.startObject()
         long total = response.hits.totalHits
         builder.field("total", total)
-        if (response.hits.hits != null) {
+        if (response.hits.hits) {
             String relatedIndex = request.extraRequestData ?: 'holdings'
             XmlNamespaceContext context = XmlNamespaceContext.newInstance()
             context.addNamespace("", NS_URI)
@@ -178,7 +178,7 @@ class SRUService implements MalvaConstants {
                 log.info("{}", logBuilder.string())
             }
         }
-        if (response.getAggregations() != null) {
+        if (response.getAggregations()) {
             String query = request.cqlQuery
             builder.startArray('facets')
             for (Aggregation aggregation : response.getAggregations()) {
@@ -192,22 +192,24 @@ class SRUService implements MalvaConstants {
                         builder.field("term", bucket.key)
                         builder.field("count", bucket.docCount)
                         String newFilter = stringTerms.getName() + "=\"" + URLEncoder.encode(bucket.getKey().toString(), "UTF-8") + "\""
-                        String filter = request.filter != null ? request.filter + " and " + newFilter : newFilter
-                        String path = request.path << "?operation=searchRetrieve&version=" << request.version <<
-                                "&query=" << query <<
-                                (filter != null ? "&filter=" << filter : '') <<
-                                (request.recordSchema != null ? '&recordSchema=' << request.recordSchema : '') <<
-                                (request.extraRequestData != null ? '&extraRequestData=' << request.extraRequestData : '') <<
-                                (request.startRecord != null? '&startRecord=' << request.startRecord : '') <<
-                                (request.maximumRecords != null ? '&maximumRecords=' << request.maximumRecords : '' ) <<
-                                (request.facetLimit != null ? '&facetLimit=' << request.facetLimit : '')
+                        String filter = request.filter ? request.filter + " and " + newFilter : newFilter
+                        String path = request.path <<
+                                "?operation=searchRetrieve" <<
+                                (request.version ? '&version=' << request.version : '') <<
+                                (query ? "&query=" << query : '')  <<
+                                (filter ? "&filter=" << filter : '') <<
+                                (request.recordSchema ? '&recordSchema=' << request.recordSchema : '') <<
+                                (request.extraRequestData ? '&extraRequestData=' << request.extraRequestData : '') <<
+                                (request.startRecord ? '&startRecord=' << request.startRecord : '') <<
+                                (request.maximumRecords ? '&maximumRecords=' << request.maximumRecords : '' ) <<
+                                (request.facetLimit ? '&facetLimit=' << request.facetLimit : '')
                         builder.field("requestUrl", XMLUtil.escape(path))
                         builder.endObject()
                     }
                     builder.endArray()
                     builder.endObject()
                 } else if (aggregation instanceof LongTerms) {
-                    LongTerms longTerms = (LongTerms) aggregation
+                    LongTerms longTerms = aggregation as LongTerms
                     builder.startObject()
                     builder.field("name", longTerms.name)
                     builder.startArray("buckets")
@@ -216,15 +218,17 @@ class SRUService implements MalvaConstants {
                         builder.field("term", bucket.getKey())
                         builder.field("count", bucket.getDocCount())
                         String newFilter = longTerms.getName() + "=\"" + URLEncoder.encode(bucket.getKey().toString(), "UTF-8") + "\""
-                        String filter = request.filter != null ? request.filter + " and " + newFilter : newFilter
-                        String path = request.path << "?operation=searchRetrieve&version=" << request.version <<
-                                "&query=" << query <<
-                                (filter != null ? "&filter=" << filter : '') <<
-                                (request.recordSchema != null ? '&recordSchema=' << request.recordSchema : '') <<
-                                (request.extraRequestData != null ? '&extraRequestData=' << request.extraRequestData : '') <<
-                                (request.startRecord != null? '&startRecord=' << request.startRecord : '') <<
-                                (request.maximumRecords != null ? '&maximumRecords=' << request.maximumRecords : '' ) <<
-                                (request.facetLimit != null ? '&facetLimit=' << request.facetLimit : '')
+                        String filter = request.filter ? request.filter + " and " + newFilter : newFilter
+                        String path = request.path <<
+                                "?operation=searchRetrieve" <<
+                                (request.version ? '&version=' << request.version : '') <<
+                                (query ? "&query=" << query : '') <<
+                                (filter ? "&filter=" << filter : '') <<
+                                (request.recordSchema ? '&recordSchema=' << request.recordSchema : '') <<
+                                (request.extraRequestData ? '&extraRequestData=' << request.extraRequestData : '') <<
+                                (request.startRecord ? '&startRecord=' << request.startRecord : '') <<
+                                (request.maximumRecords ? '&maximumRecords=' << request.maximumRecords : '' ) <<
+                                (request.facetLimit ? '&facetLimit=' << request.facetLimit : '')
                         builder.field("requestUrl", XMLUtil.escape(path))
                         builder.endObject()
                     }
