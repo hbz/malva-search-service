@@ -34,7 +34,7 @@ xmlDeclaration()
               'facet:terms' {
                 facet.buckets.each { bucket ->
                   'facet:term' {
-                    'facet:actualTerm' "${bucket.term}"
+                    'facet:actualTerm' org.xbib.content.xml.util.XMLUtil.escape("${bucket.term}")
                     'facet:requestUrl' "${bucket.requestUrl}"
                     'facet:count' "${bucket.count}"
                   }
