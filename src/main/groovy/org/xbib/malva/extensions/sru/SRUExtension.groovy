@@ -36,7 +36,8 @@ class SRUExtension implements MalvaExtension, SRUConstants {
         this.settings = settings
         this.webapp = webapp
         this.elasticsearchService = elasticsearchService
-        log.info('SRU extension started, Elasticsearch service = {}', elasticsearchService)
+        log.info('SRU extension {} started for webapp {}, Elasticsearch service = {}',
+                name, webapp, elasticsearchService)
     }
 
     @Override

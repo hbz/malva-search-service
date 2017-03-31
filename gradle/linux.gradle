@@ -6,7 +6,7 @@ task rhelBinCopy(type: Copy) {
     expand([
             'profile' : "${project.profile}",
             'alpn': [
-                    'lib': "alpn-boot-${versions.alpnboot}.jar"
+                    'lib': "alpn-boot-${project.property('alpnboot.version')}.jar"
             ]
     ])
 }

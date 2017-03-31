@@ -1,4 +1,5 @@
 org.xbib.malva.settings.MalvaSettingsModule
 org.xbib.malva.elasticsearch.ElasticsearchModule
 org.xbib.malva.WebappModule
-org.xbib.malva.network.NetworkModule
+org.xbib.malva.network.helianthus.HelianthusNetworkModule
+

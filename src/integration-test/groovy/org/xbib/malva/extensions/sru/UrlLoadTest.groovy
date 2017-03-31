@@ -1,6 +1,7 @@
 package org.xbib.malva.extensions.sru
 
 import groovy.util.logging.Log4j2
+import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
@@ -11,6 +12,8 @@ import static org.junit.Assert.assertTrue
 @Log4j2
 class UrlLoadTest {
 
+    @Ignore
+    @Test
     void testLoad() {
         try {
             List<URL> urls = [

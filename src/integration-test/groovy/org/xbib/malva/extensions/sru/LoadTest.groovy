@@ -5,6 +5,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.xbib.content.settings.Settings
 import org.xbib.malva.bootstrap.WebappServer
+import org.xbib.malva.network.NetworkUtils
 import org.xbib.malva.request.path.PathDecoder
 import org.xbib.malva.util.MultiMap
 
@@ -19,21 +20,25 @@ class LoadTest {
     @Ignore
     @Test
     void testLoad() {
+
+        // add net.hostname to system properties
+        NetworkUtils.configureSystemProperties();
+
         WebappServer webappServer = new WebappServer()
         try {
             Settings settings = Settings.settingsBuilder()
+                    .put('webapp.profile', 'zbn')
                     .put('webapp.home', 'src/main/webapps')
                     .put('webapp.networkclass', 'LOCAL')
                     .put('webapp.uri', 'http://${net.hostname}:9500')
                     .put('webapp.extension.sru.type', SRUExtension.class.getName())
-                    .put('elasticsearch.transport.enabled', 'true')
-                    .put('elasticsearch.transport.cluster', 'zbn')
-                    .put('elasticsearch.transport.host', 'zephyros:9300')
+                    .put('webapp.extension.elasticsearch.transport.enabled', 'true')
+                    .put('webapp.extension.elasticsearch.transport.cluster', 'zbn')
+                    .put('webapp.extension.elasticsearch.transport.host', 'zephyros:9300')
                     .build()
             webappServer.run(settings)
             SRUExtension sru = webappServer.webappService.webapps().get('default').extensions().get('sru') as SRUExtension
             PathDecoder decoder = new PathDecoder('/sru/hbz/', StandardCharsets.UTF_8)
-            //decoder.parse('index=hbzfix&version=2.0&operation=searchRetrieve&query=linux&recordSchema=mods&extraRequestData=holdings&facetLimit=10:dc.type')
             decoder.parse('index=hbz&version=2.0&operation=searchRetrieve&query=linux&extraRequestData=holdings')
 
             final String path = decoder.path()

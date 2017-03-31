@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils
 
 task downloadChromeDriver {
     def outputFile = file("$buildDir/webdriver/chromedriver.zip")
-    inputs.property("chromeDriverVersion", versions.chrome)
+    inputs.property("chromeDriverVersion", project.property('chrome.version'))
     outputs.file(outputFile)
 
     doLast {
@@ -24,7 +24,7 @@ task downloadChromeDriver {
         } else if (Os.isFamily(Os.FAMILY_UNIX)) {
             driverOsFilenamePart = Os.isArch("amd64") ? "linux64" : "linux32"
         }
-        FileUtils.copyURLToFile(new URL("http://chromedriver.storage.googleapis.com/${versions.chrome}/chromedriver_${driverOsFilenamePart}.zip"), outputFile)
+        FileUtils.copyURLToFile(new URL("http://chromedriver.storage.googleapis.com/${project.property('chrome.version')}/chromedriver_${driverOsFilenamePart}.zip"), outputFile)
     }
 }
 
@@ -47,9 +47,9 @@ task downloadPhantomJs {
         osFilenamePart = Os.isArch("amd64") ? "linux-x86_64.tar.bz2" : "linux-i686.tar.bz2"
     }
 
-    def filename = "phantomjs-${versions.phantomJs}-$osFilenamePart"
+    def filename = "phantomjs-${project.property('phantomJs.version')}-$osFilenamePart"
     def outputFile = file("$buildDir/webdriver/$filename")
-    inputs.property("phantomJsVersion", versions.phantomJs)
+    inputs.property("phantomJsVersion", project.property('phantomJs.version'))
     outputs.file(outputFile)
 
     doLast {

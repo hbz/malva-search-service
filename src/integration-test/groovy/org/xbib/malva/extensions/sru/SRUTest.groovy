@@ -1,8 +1,10 @@
 package org.xbib.malva.extensions.sru
 
 import groovy.util.logging.Log4j2
+import org.junit.Test
 import org.xbib.content.settings.Settings
 import org.xbib.malva.bootstrap.WebappServer
+import org.xbib.malva.network.NetworkUtils
 import org.xbib.malva.request.path.PathDecoder
 
 import java.nio.charset.StandardCharsets
@@ -10,17 +12,23 @@ import java.nio.charset.StandardCharsets
 @Log4j2
 class SRUTest {
 
+    @Test
     void testSearchRetrieve() {
+
+        // add net.hostname to system properties
+        NetworkUtils.configureSystemProperties();
+
         WebappServer webappServer = new WebappServer()
         try {
             Settings settings = Settings.settingsBuilder()
+                    .put('webapp.profile', 'zbn')
                     .put('webapp.home', 'src/main/webapps')
                     .put('webapp.networkclass', 'LOCAL')
                     .put('webapp.uri', 'http://${net.hostname}:9500')
                     .put('webapp.extension.sru.type', SRUExtension.class.getName())
-                    .put('elasticsearch.transport.enabled', 'true')
-                    .put('elasticsearch.transport.cluster', 'zbn')
-                    .put('elasticsearch.transport.host', 'zephyros:9300')
+                    .put('webapp.extension.elasticsearch.transport.enabled', 'true')
+                    .put('webapp.extension.elasticsearch.transport.cluster', 'zbn')
+                    .put('webapp.extension.elasticsearch.transport.host', 'zephyros:9300')
                     .build()
             webappServer.run(settings)
             SRUExtension sru = webappServer.webappService.webapps().get('default').extensions().get('sru') as SRUExtension
