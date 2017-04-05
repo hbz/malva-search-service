@@ -12,7 +12,7 @@ html(lang:'en') {
       div(class: 'alert alert-danger') {
         p(class: 'responseStatus') {
           strong "Status"
-          yield " ${stringOf { response.httpStatus } }"
+          yield " ${stringOf { response.responseStatus } }"
         }
         p(class: 'exception') {
           strong "Exception"

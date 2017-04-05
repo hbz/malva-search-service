@@ -22,7 +22,13 @@
       },
       "mapper" : {
         "gtpl" : {
-          "type" : "org.xbib.malva.resource.mapper.MarkupTemplateMapper"
+          "type" : "org.xbib.malva.resource.mapper.MarkupTemplateMapper",
+          "template": {
+            "autoescape": true,
+            "autonewline": true,
+            "autoindent": true,
+            "usedoublequotes": true
+          }
         }
       },
       "endpoint" : {

@@ -1,6 +1,7 @@
 plugins {
     id "org.sonarqube" version "2.2"
-    id 'nebula.ospackage' version '4.0.0'
+    id "nebula.ospackage" version "4.0.0"
+    id "io.codearte.nexus-staging" version "0.7.0"
 }
 
 printf "Host: %s\nOS: %s %s %s\nJVM: %s %s %s %s\nGroovy: %s\nGradle: %s\n" +
@@ -24,6 +25,7 @@ apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'jacoco'
 apply plugin: 'nebula.rpm'
+apply plugin: "io.codearte.nexus-staging"
 
 // for web browser testing
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -61,7 +63,7 @@ configurations {
 }
 
 dependencies {
-    compile "org.xbib.malva:malva-elasticsearch:${project.property('malva.version')}"
+    compile "org.xbib.malva:malva-elasticsearch:${project.property('malva-elasticsearch.version')}"
     compile "org.xbib:cql:${project.property('xbib-cql.version')}"
     compile "org.xbib:content-xml:${project.property('xbib-content.version')}"
     compile "com.fasterxml.woodstox:woodstox-core:${project.property('woodstox.version')}"
@@ -110,8 +112,7 @@ dependencies {
     distJars "com.github.spullara.mustache.java:compiler:${project.property('mustache.version')}"
     // indy
     distJars "org.codehaus.groovy:groovy-all:${project.property('groovy.version')}:indy"
-    distJars "org.xbib.malva:malva:${project.property('malva.version')}"
-    distJars "org.xbib.malva:malva-elasticsearch:${project.property('malva.version')}"
+    distJars "org.xbib.malva:malva-elasticsearch:${project.property('malva-elasticsearch.version')}"
     // better netty performance
     distJars "org.javassist:javassist:${project.property('javassist.version')}"
     // netty 4.1 needs alpn for http/2

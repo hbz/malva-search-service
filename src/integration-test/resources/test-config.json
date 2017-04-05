@@ -39,16 +39,6 @@
       "creation": {
         "enabled": false
       }
-    },
-    "mapper": {
-      "mapper1": {
-        "type": "org.xbib.malva.resource.mapper.MarkupTemplateMapper",
-        "script": "sru/index.tpl",
-        "path": [
-          "/sru/{index}/",
-          "/sru/{index}"
-        ]
-      }
     }
   }
 }

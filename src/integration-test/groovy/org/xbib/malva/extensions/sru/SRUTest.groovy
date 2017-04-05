@@ -31,10 +31,12 @@ class SRUTest {
                     .put('webapp.extension.elasticsearch.transport.host', 'zephyros:9300')
                     .build()
             webappServer.run(settings)
+            //decoder.parse('index=hbzfix&version=2.0&operation=searchRetrieve&query=linux&recordSchema=mods&extraRequestData=holdings&facetLimit=10:dc.type')
+
+
             SRUExtension sru = webappServer.webappService.webapps().get('default').extensions().get('sru') as SRUExtension
             PathDecoder decoder = new PathDecoder('/sru/hbz/', StandardCharsets.UTF_8)
-            //decoder.parse('index=hbzfix&version=2.0&operation=searchRetrieve&query=linux&recordSchema=mods&extraRequestData=holdings&facetLimit=10:dc.type')
-            decoder.parse('index=hbz&version=1.2&operation=searchRetrieve&query=linux&extraRequestData=holdings')
+            decoder.parse('index=hbz&version=2.0&operation=searchRetrieve&query=linux&recordSchema=json&extraRequestData=holdings')
             Map<String,Object> result = sru.execute(decoder.path(), decoder.params(), true)
             log.info("sru={}", result)
         } catch (Throwable t) {

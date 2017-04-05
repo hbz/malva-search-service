@@ -14,7 +14,7 @@ task xbibUpload(type: Upload) {
     }
 }
 
-task mavenCentralUpload(type: Upload) {
+task sonaTypeUpload(type: Upload) {
     configuration = configurations.archives
     uploadDescriptor = true
     repositories {
@@ -28,10 +28,13 @@ task mavenCentralUpload(type: Upload) {
                     authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
                 pom.project {
-                    name name
+                    groupId project.group
+                    artifactId project.name
+                    version project.version
+                    name project.name
                     description description
                     packaging 'jar'
-                    inceptionYear '2012'
+                    inceptionYear '2016'
                     url scmUrl
                     organization {
                         name 'xbib'
@@ -86,9 +89,9 @@ task hbzUpload(type: Upload) {
                         }
                     }
                     scm {
-                        url 'https://github.com/xbib/elasticsearch-webapp-libraryservice'
-                        connection 'scm:git:git://github.com/xbib/elasticsaerch-webapp-libraryservice.git'
-                        developerConnection 'scm:git:git://github.com/xbib/elasticsaerch-webapp-libraryservice.git'
+                        url scmUrl
+                        connection scmConnection
+                        developerConnection scmDeveloperConnection
                     }
                     inceptionYear '2016'
                     licenses {
@@ -104,3 +107,6 @@ task hbzUpload(type: Upload) {
     }
 }
 
+nexusStaging {
+    packageGroup = "org.xbib"
+}
