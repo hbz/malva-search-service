@@ -28,7 +28,7 @@ class SRUTest {
                     .put('webapp.extension.sru.type', SRUExtension.class.getName())
                     .put('webapp.extension.elasticsearch.transport.enabled', 'true')
                     .put('webapp.extension.elasticsearch.transport.cluster', 'zbn')
-                    .put('webapp.extension.elasticsearch.transport.host', 'zephyros:9300')
+                    .put('webapp.extension.elasticsearch.transport.host', '10.3.2.31:9300')
                     .build()
             webappServer.run(settings)
             //decoder.parse('index=hbzfix&version=2.0&operation=searchRetrieve&query=linux&recordSchema=mods&extraRequestData=holdings&facetLimit=10:dc.type')

@@ -42,7 +42,9 @@ sub region_select_avail {
     if ($content) {
         my $response = decode_json($content);
         my $regions = $response->{meta}->{interlibrarybyregions};
-        foreach my $key (@{$regions->{$region})
+        foreach my $key (@{$regions->{$region}}) {
+
+        }
     } else {
         return undef;
     }
@@ -72,9 +74,9 @@ package main;
 
 use Data::Dumper;
 
-my $plis = Search::PLI->new();
-#print Dumper $plis->single_avail('NRW', 'DE-465', '852471-3', 1991);
+my $pli = Search::PLI->new();
+print Dumper $pli->single_avail('NRW', 'DE-465', '852471-3', 1991);
 
-print Dumper $plis->all_avail('25098263', 2017);
+#print Dumper $pli->region_avail('25098263', 2017);
 
 1;
