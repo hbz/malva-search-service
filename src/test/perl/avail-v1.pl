@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use utf8;
 
-use Sys::Hostname;
 use JSON qw(decode_json);
 use LWP::UserAgent ();
 
@@ -13,7 +12,7 @@ sub new {
     my $self = bless ({}, ref ($class) || $class);
     bless ($self, $class);
     $self->{ua} = LWP::UserAgent->new();
-    $self->{url} = "http://" . hostname . ":9500/pli";
+    $self->{url} = "http://10.3.2.31:9500/pli";
     return $self;
 }
 
@@ -59,15 +58,83 @@ sub single_avail {
     my $content = $self->{ua}->get($url)->decoded_content;
     my $response = decode_json($content);
     my $priority;
-    my $info;
+    my $info = '';
     foreach my $key (keys %{$response->{interlibrary}}) {
         my ($library_isil, $library_services) = ($key, $response->{interlibrary}->{$key});
         foreach my $library_service (@$library_services) {
             $priority = $library_service->{priority} unless $priority;
-            $info = $library_service unless $info
+            $info = append_info($info, $library_service);
         }
     }
     return ($priority, $info);
+}
+
+sub append_info {
+    my ($self, $response, $service) = @_;
+    $response .= 'LP' . $service->{priority} . ": ";
+    if ($service->{type} eq 'none') {
+        $response .= ' keine Fernleihe erlaubt ';
+    } else {
+        $response .=  $self->carriertype->{$service->{carriertype}};
+        my $modes = ref $service->{mode} eq 'ARRAY' ? $service->{mode} : [ $service->{mode} ] ;
+        foreach my $mode (@$modes) {
+            if ($mode ne 'copy') {
+                $response .= ' - ' . $self->servicemode->{$mode};
+            }
+        }
+        if ($service->{priority} < 3) {
+            $response .= ' - beschleunigte Übertragung';
+        }
+        if ($service->{distribution}) {
+            my $distributions = ref $service->{distribution} eq 'ARRAY' ? $service->{distribution} : [ $service->{distribution} ] ;
+            foreach my $distribution (@$distributions) {
+                $response .= ' - ' . $self->servicedistribution->{$distribution};
+            }
+        }
+        if ($service->{comment}) {
+            $response .= ' (' . $service->{comment} . ')';
+        }
+    }
+    $response .= "\n";
+    return $response;
+}
+
+sub carriertype {
+    return {
+        'online resource' => 'Online-Ressource',
+        'volume' => 'gesdruckte Ressource',
+        'computer disc' => 'CD/DVD',
+        'computer tape cassette' => 'Computer-Kassette',
+        'computer chip cartridge' => 'Computer-Steckmodul',
+        'microform' => 'Mikroform',
+        'other' => 'sonstiges Medium'
+    }
+}
+
+sub servicetype {
+    return {
+        'interlibrary' => 'Leihverkehr',
+        'none' => 'Kein Leihverkehr'
+    }
+}
+
+sub servicemode {
+    return {
+        'copy' => 'Kopie',
+        'loan' => 'Leihe',
+        'none' => 'Keine Kopie/Leihe',
+        'electronic' => 'Kopie mit elektronischem Versand'
+    }
+}
+
+sub servicedistribution {
+    return {
+        'postal' => 'Papierkopie an Bestellbibliothek',
+        'domestic' => 'nur Inland',
+        'electronic' => 'auch elektronisch',
+        'unrestricted' => '',
+        'none' => ''
+    }
 }
 
 package main;
