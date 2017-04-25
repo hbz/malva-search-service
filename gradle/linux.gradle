@@ -6,7 +6,7 @@ task rhelBinCopy(type: Copy) {
     expand([
             'profile' : "${project.profile}",
             'alpn': [
-                    'lib': "alpn-boot-${project.property('alpnboot.version')}.jar"
+                    'lib': "jetty-alpn-agent-${project.property('alpnagent.version')}.jar"
             ]
     ])
 }

@@ -25,7 +25,7 @@ class HTTPEndpointTest {
             webappServer.run(getClass().getResourceAsStream('/test-config.json'))
             URI uri = webappServer.networkService.getURIs().get(0)
             URL base = uri.toURL()
-            URL url = new URL(base, "/sru/de-468-introx-20170404/?version=2.0&operation=searchRetrieve&recordSchema=json&extraRequestData=holdings&query=%28.%29+sortby+dc.date%2Fsort.descending&facetLimit=21%3Adc.type%2C21%3Adc.format%2C21%3Aintrox.subject%2C21%3Adc.language%2C100%3Acollection&startRecord=1&maximumRecords=20")
+            URL url = new URL(base, "/sru/de-468-introx-/?version=2.0&operation=searchRetrieve&recordSchema=json&extraRequestData=holdings&query=%28.%29+sortby+dc.date%2Fsort.descending&facetLimit=21%3Adc.type%2C21%3Adc.format%2C21%3Aintrox.subject%2C21%3Adc.language%2C100%3Acollection&startRecord=1&maximumRecords=20")
             HttpURLConnection connection = (HttpURLConnection) url.openConnection()
             connection.setRequestMethod("GET")
             connection.setDoInput(true)
@@ -47,12 +47,13 @@ class HTTPEndpointTest {
             URI uri = webappServer.networkService.getURIs().get(0)
             NetworkService networkService = webappServer.networkService
             Request request = networkService.newRequest()
-            request.path = "/sru/de-468-introx-20170404/"
+            request.path = "/sru/de-468-introx-/"
             request.params = [ version: '2.0',
                                operation: 'searchRetrieve',
                                recordSchema: 'json',
                                extraRequestData: 'holdings',
                                query: '(.) sortby dc.date/sort.descending',
+                               filter: 'introx.subject=MeSH',
                                facetLimit: '21:dc.type,21:dc.format,21:introx.subject,21:dc.language,1:collection',
                                startRecord: 1,
                                maximumRecords: 20

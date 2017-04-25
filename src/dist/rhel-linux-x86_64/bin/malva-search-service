@@ -42,7 +42,7 @@ if [ ! -x "\$JAVA" ]; then
 fi
 
 exec \${JAVA} \
- -Xbootclasspath/p:/usr/share/\${app}/lib/${alpn.lib}:\${dir}/../lib/${alpn.lib} \
+ -javaagent:/usr/share/malva/lib/${alpn.lib} \
  \${MALVA_SEARCH_SERVICE_OPTS} \
  -classpath \${classpath} \
  org.xbib.malva.bootstrap.Bootstrap \${conf}

@@ -4,26 +4,6 @@
     "home" : "src/main/webapps",
     "networkclass": "LOCAL",
     "uri": "http://${net.hostname}:9500",
-    "extension": {
-      "elasticsearch" : {
-        "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension",
-        "enabled" : true,
-        "transport" : {
-          "enabled" : true,
-          "path" : {
-            "home" : "."
-          },
-          "cluster" : "zbn",
-          "host" : [ "10.3.2.31:9300" ],
-          "settings" : {
-            "network.host" : "localhost"
-          }
-        }
-      },
-      "sru": {
-        "type": "org.xbib.malva.extensions.sru.SRUExtension"
-      }
-    },
     "sessions": {
       "enabled": false
     },

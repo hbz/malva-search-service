@@ -1,7 +1,7 @@
 plugins {
     id "org.sonarqube" version "2.2"
-    id "nebula.ospackage" version "4.0.0"
     id "io.codearte.nexus-staging" version "0.7.0"
+    id "nebula.ospackage" version "4.0.0"
 }
 
 printf "Host: %s\nOS: %s %s %s\nJVM: %s %s %s %s\nGroovy: %s\nGradle: %s\n" +
@@ -51,7 +51,7 @@ sourceSets {
 }
 
 configurations {
-    alpnboot
+    alpnagent
     wagon
     distJars
     integrationTestCompile {
@@ -63,13 +63,13 @@ configurations {
 }
 
 dependencies {
+    compileOnly "org.codehaus.groovy:groovy-all:${project.property('groovy.version')}"
     compile "org.xbib.malva:malva-elasticsearch:${project.property('malva-elasticsearch.version')}"
     compile "org.xbib:cql:${project.property('xbib-cql.version')}"
     compile "org.xbib:content-xml:${project.property('xbib-content.version')}"
     compile "com.fasterxml.woodstox:woodstox-core:${project.property('woodstox.version')}"
     compile "xerces:xercesImpl:${project.property('xerces.version')}"
     compile "xalan:xalan:${project.property('xalan.version')}"
-    compileOnly "org.codehaus.groovy:groovy-all:${project.property('groovy.version')}"
     testCompile "org.apache.logging.log4j:log4j-1.2-api:${project.property('log4j.version')}"
     testCompile "org.apache.logging.log4j:log4j-jul:${project.property('log4j.version')}"
     testCompile "org.apache.logging.log4j:log4j-jcl:${project.property('log4j.version')}"
@@ -82,28 +82,16 @@ dependencies {
         // phantomjs driver pulls in a different selenium version
         transitive = false
     }
-    wagon 'org.apache.maven.wagon:wagon-ssh-external:2.10'
-    // openssl native libs are optional and must be added to integration-test classpath separately
-    if ('os x' == org.gradle.internal.os.OperatingSystem.current().getFamilyName()) {
-        integrationTestCompile "io.netty:netty-tcnative:${project.property('tcnative.version')}:osx-x86_64"
-    }
-    if ('linux' == org.gradle.internal.os.OperatingSystem.current().getFamilyName()) {
-        if (new File("/etc/redhat-release").exists()) {
-            // use this for linking to libssl.so.10 (RHEL/Fedora/CentOS)
-            integrationTestCompile "io.netty:netty-tcnative:${project.property('tcnative.version')}:linux-x86_64-fedora"
-        } else {
-            // use this for linking to libssl.so.1.0.0
-            integrationTestCompile "io.netty:netty-tcnative:${project.property('tcnative.version')}:linux-x86_64"
-        }
-    }
-    alpnboot "org.mortbay.jetty.alpn:alpn-boot:${project.property('alpnboot.version')}"
+    wagon "org.apache.maven.wagon:wagon-ssh:${project.property('wagon.version')}"
+    alpnagent "org.mortbay.jetty.alpn:jetty-alpn-agent:${project.property('alpnagent.version')}"
+
     distJars("org.elasticsearch:elasticsearch:${project.property('elasticsearch.version')}") {
         // dependencies that are overriden by org.xbib deps
         exclude group: 'com.fasterxml.jackson.core'
         exclude group: 'com.fasterxml.jackson.dataformat'
         exclude group: 'com.google.guava'
         // dependencies that are not for client
-        exclude module: 'org.elasticsearch:securesm'
+        exclude module: 'securesm'
         // we use log4j2, not log4j
         exclude group: 'log4j'
     }
@@ -116,7 +104,6 @@ dependencies {
     // better netty performance
     distJars "org.javassist:javassist:${project.property('javassist.version')}"
     // netty 4.1 needs alpn for http/2
-    distJars "org.mortbay.jetty.alpn:alpn-boot:${project.property('alpnboot.version')}"
     // additional packages for search service
     distJars "org.xbib:cql:${project.property('xbib-cql.version')}"
     distJars "org.xbib:content-xml:${project.property('xbib-content.version')}"
@@ -145,8 +132,7 @@ test {
 }
 
 task integrationTest(type: Test) {
-    // note: bootstrapClasspath does not use /p (or /a)
-    jvmArgs "-Xbootclasspath/p:" + configurations.alpnboot.asPath
+    jvmArgs "-javaagent:" + configurations.alpnagent.asPath
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = configurations.integrationTestCompile
     classpath += sourceSets.main.output
