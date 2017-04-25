@@ -6,6 +6,7 @@ use utf8;
 
 use JSON qw(decode_json);
 use LWP::UserAgent ();
+use Data::Dumper;
 
 sub new {
     my ($class) = @_;
@@ -20,9 +21,7 @@ sub region_avail {
     my ($self, $id, $year) = @_;
     $self->{ua}->default_header('Accept', 'application/json');
     my $url = $self->{url} . '/avail-v1?id=' . $id . '&year=' . $year;
-    print STDERR $url, "\n";
     my $content = $self->{ua}->get($url)->decoded_content;
-    #print STDERR $content;
     if ($content) {
         my $response = decode_json($content);
         return $response->{meta}->{interlibrarybyregions};
@@ -35,9 +34,7 @@ sub region_select_avail {
     my ($self, $region, $id, $year) = @_;
     $self->{ua}->default_header('Accept', 'application/json');
     my $url = $self->{url} . '/avail-v1?id=' . $id . '&year=' . $year;
-    print STDERR $url, "\n";
     my $content = $self->{ua}->get($url)->decoded_content;
-    #print STDERR $content;
     if ($content) {
         my $response = decode_json($content);
         my $regions = $response->{meta}->{interlibrarybyregions};
@@ -54,7 +51,6 @@ sub single_avail {
     my ($self, $region, $isil, $id, $year) = @_;
     $self->{ua}->default_header('Accept', 'application/json');
     my $url = $self->{url} . '/avail-v1/' . $region . '/' . $isil . '?id=' . $id . '&year=' . $year . '&library=' . $isil;
-    print STDERR $url, "\n";
     my $content = $self->{ua}->get($url)->decoded_content;
     my $response = decode_json($content);
     my $priority;
@@ -63,7 +59,7 @@ sub single_avail {
         my ($library_isil, $library_services) = ($key, $response->{interlibrary}->{$key});
         foreach my $library_service (@$library_services) {
             $priority = $library_service->{priority} unless $priority;
-            $info = append_info($info, $library_service);
+            $info = $self->append_info($info, $library_service);
         }
     }
     return ($priority, $info);
@@ -102,7 +98,7 @@ sub append_info {
 sub carriertype {
     return {
         'online resource' => 'Online-Ressource',
-        'volume' => 'gesdruckte Ressource',
+        'volume' => 'gedruckte Ressource',
         'computer disc' => 'CD/DVD',
         'computer tape cassette' => 'Computer-Kassette',
         'computer chip cartridge' => 'Computer-Steckmodul',
