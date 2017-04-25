@@ -103,8 +103,8 @@ dependencies {
     distJars "org.xbib.malva:malva-elasticsearch:${project.property('malva-elasticsearch.version')}"
     // better netty performance
     distJars "org.javassist:javassist:${project.property('javassist.version')}"
-    // netty 4.1 needs alpn for http/2
-    // additional packages for search service
+    // netty 4.1 on JDK 8 needs alpn for TLS and http/2
+    distJars "org.mortbay.jetty.alpn:jetty-alpn-agent:${project.property('alpnagent.version')}"
     distJars "org.xbib:cql:${project.property('xbib-cql.version')}"
     distJars "org.xbib:content-xml:${project.property('xbib-content.version')}"
     distJars "com.fasterxml.woodstox:woodstox-core:${project.property('woodstox.version')}"

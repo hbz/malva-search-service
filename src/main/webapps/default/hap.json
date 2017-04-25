@@ -1,209 +1,209 @@
 {
-    "webapp": {
-      "uri": [ "http://${net.hostname}:9500/" ],
-      "server" : {
-        "1" : {
-          "enabled": true,
-          "name": "${net.hostname}",
-          "mount": {
-            "path": [
-              "dist"
-            ],
-            "classpath": {
-              "META-INF/resources/webjars": "webjars"
-            }
-          }
-        }
-      },
-      "template" : {
-        "locale" : "de-DE"
-      },
-      "extension" : {
-        "elasticsearch" : {
-          "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension",
-          "enabled" : true,
-          "transport" : {
-            "enabled" : true,
-            "path" : {
-              "home" : "."
-            },
-            "cluster" : "hap",
-            "host" : [ "10.3.2.81:9300", "10.3.2.83:9300", "10.3.2.85:9300" ],
-            "settings" : {
-              "network.host" : "localhost"
-            }
-          }
-        },
-        "sru" : {
-          "type": "org.xbib.malva.extensions.sru.SRUExtension"
-        },
-        "pli" : {
-          "type": "org.xbib.malva.extensions.pli.PublicLibraryInitiativeExtension",
-          "regions": {
-            "NRW": {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "NRW",
-                "BAY",
-                "GBV",
-                "BAW",
-                "SAX",
-                "HES",
-                "BER"
-              ]
-            },
-            "BAY" : {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "BAY",
-                "NRW",
-                "GBV",
-                "BAW",
-                "SAX",
-                "HES",
-                "BER"
-              ]
-            },
-            "GBV" : {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "GBV",
-                "BAY",
-                "NRW",
-                "BAW",
-                "SAX",
-                "HES",
-                "BER"
-              ]
-            },
-            "BAW" : {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "BAW",
-                "GBV",
-                "BAY",
-                "NRW",
-                "SAX",
-                "HES",
-                "BER"
-              ]
-            },
-            "SAX" : {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "SAX",
-                "BER",
-                "HES",
-                "BAW",
-                "GBV",
-                "BAY",
-                "NRW"
-              ]
-            },
-            "HES" : {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "HES",
-                "BAW",
-                "GBV",
-                "BAY",
-                "NRW",
-                "SAX",
-                "BER"
-              ]
-            },
-            "BER" : {
-              "priorities": [],
-              "restrictions": {},
-              "regions": [
-                "BER",
-                "HES",
-                "BAW",
-                "GBV",
-                "BAY",
-                "NRW",
-                "SAX"
-              ]
-            }
-          }
-        }
-      },
-      "handler" : {
-        "requestlogger" : {
-          "type": "org.xbib.malva.logging.RequestLogHandler"
-        },
-        "accesslogger" : {
-          "type": "org.xbib.malva.logging.CombinedAccessLogHandler"
-        }
-      },
-      "mapper" : {
-        "gtpl" : {
-          "type" : "org.xbib.malva.resource.mapper.MarkupTemplateMapper",
-          "template": {
-            "autoescape": true,
-            "autonewline": true,
-            "autoindent": true,
-            "usedoublequotes": true
-          }
-        }
-      },
-      "endpoint" : {
-        "/sru/{index}" : {
-          "template" : "sru/index.gtpl"
-        },
-        "/sru/{index}/" : {
-          "template" : "sru/index.gtpl"
-        },
-        "/pli/{base_service}" : {
-          "template" : "pli/service.gtpl"
-        },
-        "/pli/{base_service}/" : {
-          "template" : "pli/service.gtpl"
-        },
-        "/pli/{base_service}/{base_region}" : {
-          "template" : "pli/service.gtpl"
-        },
-        "/pli/{base_service}/{base_region}/" : {
-          "template" : "pli/service.gtpl"
-        },
-        "/pli/{base_service}/{base_region}/{base_library}" : {
-          "template" : "pli/service.gtpl"
-        },
-        "/pli/{base_service}/{base_region}/{base_library}/" : {
-          "template" : "pli/service.gtpl"
-        },
-        "/**" : {
-          "type": "org.xbib.malva.resource.endpoint.TemplateEndpoint",
-          "index-file" : ["index.gtpl"]
-        }
-      },
-      "sessions": {
-        "enabled": false,
-        "cookies": {
-          "path": "/"
-        }
-      },
-      "logging": {
-        "access": {
-          "enabled": true
-        },
-        "request": {
-          "enabled": true
-        }
-      },
-      "index": {
-        "creation": {
-          "enabled": false,
-          "timestamp" : {
-            "enabled": false
+  "webapp": {
+    "uri": "http://${net.hostname}:9500/",
+    "server" : {
+      "1" : {
+        "enabled": true,
+        "name": "${net.hostname}",
+        "mount": {
+          "path": [
+            "dist"
+          ],
+          "classpath": {
+            "META-INF/resources/webjars": "webjars"
           }
         }
       }
+    },
+    "template" : {
+      "locale" : "de-DE"
+    },
+    "extension" : {
+      "elasticsearch" : {
+        "type": "org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension",
+        "enabled" : true,
+        "transport" : {
+          "enabled" : true,
+          "path" : {
+            "home" : "."
+          },
+          "cluster" : "hap",
+          "host" : [ "10.3.2.81:9300", "10.3.2.83:9300", "10.3.2.85:9300" ],
+          "settings" : {
+            "network.host" : "localhost"
+          }
+        }
+      },
+      "sru" : {
+        "type": "org.xbib.malva.extensions.sru.SRUExtension"
+      },
+      "pli" : {
+        "type": "org.xbib.malva.extensions.pli.PublicLibraryInitiativeExtension",
+        "regions": {
+          "NRW": {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "NRW",
+              "BAY",
+              "GBV",
+              "BAW",
+              "SAX",
+              "HES",
+              "BER"
+            ]
+          },
+          "BAY" : {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "BAY",
+              "NRW",
+              "GBV",
+              "BAW",
+              "SAX",
+              "HES",
+              "BER"
+            ]
+          },
+          "GBV" : {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "GBV",
+              "BAY",
+              "NRW",
+              "BAW",
+              "SAX",
+              "HES",
+              "BER"
+            ]
+          },
+          "BAW" : {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "BAW",
+              "GBV",
+              "BAY",
+              "NRW",
+              "SAX",
+              "HES",
+              "BER"
+            ]
+          },
+          "SAX" : {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "SAX",
+              "BER",
+              "HES",
+              "BAW",
+              "GBV",
+              "BAY",
+              "NRW"
+            ]
+          },
+          "HES" : {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "HES",
+              "BAW",
+              "GBV",
+              "BAY",
+              "NRW",
+              "SAX",
+              "BER"
+            ]
+          },
+          "BER" : {
+            "priorities": [],
+            "restrictions": {},
+            "regions": [
+              "BER",
+              "HES",
+              "BAW",
+              "GBV",
+              "BAY",
+              "NRW",
+              "SAX"
+            ]
+          }
+        }
+      }
+    },
+    "handler" : {
+      "requestlogger" : {
+        "type": "org.xbib.malva.logging.RequestLogHandler"
+      },
+      "accesslogger" : {
+        "type": "org.xbib.malva.logging.CombinedAccessLogHandler"
+      }
+    },
+    "mapper" : {
+      "gtpl" : {
+        "type" : "org.xbib.malva.resource.mapper.MarkupTemplateMapper",
+        "template": {
+          "autoescape": true,
+          "autonewline": true,
+          "autoindent": true,
+          "usedoublequotes": true
+        }
+      }
+    },
+    "endpoint" : {
+      "/sru/{index}" : {
+        "template" : "sru/index.gtpl"
+      },
+      "/sru/{index}/" : {
+        "template" : "sru/index.gtpl"
+      },
+      "/pli/{base_service}" : {
+        "template" : "pli/service.gtpl"
+      },
+      "/pli/{base_service}/" : {
+        "template" : "pli/service.gtpl"
+      },
+      "/pli/{base_service}/{base_region}" : {
+        "template" : "pli/service.gtpl"
+      },
+      "/pli/{base_service}/{base_region}/" : {
+        "template" : "pli/service.gtpl"
+      },
+      "/pli/{base_service}/{base_region}/{base_library}" : {
+        "template" : "pli/service.gtpl"
+      },
+      "/pli/{base_service}/{base_region}/{base_library}/" : {
+        "template" : "pli/service.gtpl"
+      },
+      "/**" : {
+        "type": "org.xbib.malva.resource.endpoint.TemplateEndpoint",
+        "index-file" : ["index.gtpl"]
+      }
+    },
+    "sessions": {
+      "enabled": false,
+      "cookies": {
+        "path": "/"
+      }
+    },
+    "logging": {
+      "access": {
+        "enabled": true
+      },
+      "request": {
+        "enabled": true
+      }
+    },
+    "index": {
+      "creation": {
+        "enabled": false,
+        "timestamp" : {
+          "enabled": false
+        }
+      }
+    }
   }
 }
