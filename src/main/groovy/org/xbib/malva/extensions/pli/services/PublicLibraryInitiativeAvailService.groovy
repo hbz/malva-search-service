@@ -50,10 +50,6 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
 
     String holdingsType
 
-    String chronoIndex
-
-    String chronoType
-
     String servicesIndex
 
     String servicesType
@@ -103,8 +99,6 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         this.partsType = settings.get("manifestations.type", "parts")
         this.holdingsIndex = settings.get("holdings.index", defaultIndex)
         this.holdingsType = settings.get("holdings.type", "holdings")
-        this.chronoIndex = settings.get("chrono.index.", defaultIndex)
-        this.chronoType = settings.get("chrono.type", "chrono")
         this.servicesIndex = settings.get("services.index", defaultIndex)
         this.servicesType = settings.get("services.type", "services")
         this.scrollMillis = settings.getAsTime("scrolltimeout",
@@ -142,7 +136,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
             }
         }
         if (!isInManifestations) {
-            // nothing found in manifestation, search in monograph parts
+            // nothing found in manifestation, search in  parts
             getRequestBuilder = new GetRequestBuilder(client, GetAction.INSTANCE)
                     .setIndex(partsIndex).setType(partsType)
                     .setId(request.id)
@@ -169,20 +163,20 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                 toResult(request, response, toLibraries(multiMap))
             }
         } else if (request.year && request.year > 0) {
-            String chronoId = request.id + "." + request.year
+            String holdingsId = request.id + "." + request.year
             getRequestBuilder = new GetRequestBuilder(client, GetAction.INSTANCE)
-                    .setIndex(chronoIndex).setType(chronoType)
-                    .setId(chronoId)
+                    .setIndex(holdingsIndex).setType(holdingsType)
+                    .setId(holdingsId)
             getResponse = getRequestBuilder.execute().actionGet()
             if (getResponse.isExists()) {
                 List<String> servicesIds = getResponse.source.get("service") as List
                 toServices(servicesIds, multiMap)
                 toResult(request, response, toLibraries(multiMap))
             } else {
-                chronoId = request.id + ".-1"
+                holdingsId = request.id + ".-1"
                 getRequestBuilder = new GetRequestBuilder(client, GetAction.INSTANCE)
-                        .setIndex(chronoIndex).setType(chronoType)
-                        .setId(chronoId)
+                        .setIndex(holdingsIndex).setType(holdingsType)
+                        .setId(holdingsId)
                 getResponse = getRequestBuilder.execute().actionGet()
                 if (getResponse.isExists()) {
                     List<String> servicesIds = getResponse.source.get("service") as List
@@ -191,7 +185,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                 }
             }
         } else {
-            // search for parent in holdings, put out everything
+            // search for holdings
             QueryBuilder queryBuilder = QueryBuilders.matchQuery("parent", request.id)
             fetchServicesFrom(holdingsIndex, holdingsType, queryBuilder, multiMap)
             toResult(request, response, toLibraries(multiMap))
@@ -200,7 +194,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
     }
 
     private void fetchServicesFrom(String index, String type, QueryBuilder queryBuilder,
-                                  MultiMap multiMap) {
+                                   MultiMap multiMap) {
         SearchRequestBuilder searchRequest = new SearchRequestBuilder(client, SearchAction.INSTANCE)
                 .setIndices(index)
                 .setTypes(type)
@@ -277,9 +271,14 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         withMode = request.mode ? request.mode.findAll { !it.startsWith(('-')) }
                 .collect { it.startsWith('+') ? it.substring(1) : it } :
                 settings.getAsArray("with_mode") as List<String>
+        List<String> defaultWithoutMode = settings.getAsArray("without_mode") as List<String>
+        // default: exclude mode 'none' from interlibrary
+        if (defaultWithoutMode.size() == 0) {
+            defaultWithoutMode = Collections.singletonList('none')
+        }
         withoutMode = request.mode ? request.mode.findAll { it.startsWith(('-')) }
                 .collect { it.substring(1) } :
-                settings.getAsArray("without_mode") as List<String>
+                defaultWithoutMode
         withDistribution = request.distribution ? request.distribution.findAll { !it.startsWith(('-')) }
                 .collect { it.startsWith('+') ? it.substring(1) : it } :
                 settings.getAsArray("with_distribution") as List<String>
@@ -293,20 +292,15 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
             int numberOfServicesBeforeFilter = library.interlibraryServices.size()
             List<Service> filteredInterlibraryServices = library.interlibraryServices.findAll { service ->
                 includeCarrierType(service) && excludeCarrierType(service) &&
-                includeCarrierType(library, service) && excludeCarrierType(library, service) &&
-                includeRegion(service) && excludeRegion(service) &&
-                includeLibrary(service) && excludeLibrary(service) &&
-                includeType(service) && excludeType(service) &&
-                includeMode(service) && excludeMode(service) &&
-                includeDistribution(service) && excludeDistribution(service)
+                        includeCarrierType(library, service) && excludeCarrierType(library, service) &&
+                        includeLibrary(service) && excludeLibrary(service) &&
+                        includeType(service) && excludeType(service) &&
+                        includeMode(service) && excludeMode(service) &&
+                        includeDistribution(service) && excludeDistribution(service)
             }
             // remove library if their services were all removed
             if (numberOfServicesBeforeFilter > 0 && filteredInterlibraryServices.isEmpty()) {
                 return false
-            }
-            // update new interlibrary services
-            if (!filteredInterlibraryServices.isEmpty()) {
-                library.setInterlibraryServices(filteredInterlibraryServices)
             }
             // search all filtered interlibrary services for non-used services by finding the difference set
             Set<Service> diff = new HashSet<>()
@@ -316,11 +310,27 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
             if (!diff.isEmpty()) {
                 nonInterlibraryServices.addAll(diff)
             }
+            // update library services at last
+            if (!filteredInterlibraryServices.isEmpty()) {
+                library.setInterlibraryServices(filteredInterlibraryServices)
+            }
             if (!nonInterlibraryServices.isEmpty()) {
                 library.setNonInterlibraryServices(nonInterlibraryServices)
             }
             true
         }
+        List<Library> librariesfilteredforregion = filteredListOfLibraries.findAll { library ->
+            int numberOfServicesBeforeFilter = library.interlibraryServices.size()
+            List<Service> filteredInterlibraryServices = library.interlibraryServices.findAll { service ->
+                includeRegion(service) && excludeRegion(service)
+            }
+            // remove library if their services were all removed
+            if (numberOfServicesBeforeFilter > 0 && filteredInterlibraryServices.isEmpty()) {
+                return false
+            }
+            true
+        }
+
         List<Library> markedListOfLibraries = filteredListOfLibraries.collect { library ->
             library.setMarker(getMarker(library))
         }
@@ -330,7 +340,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         Map<String, List<Library>> allregions = markedListOfLibraries.groupBy { library ->
             library.region.name
         }
-        // remove "null" region (region not set = unconfigured library)
+        // remove "null" region (region not set = unconfigured library -> emit warning)
         List<Library> unconfiguredLibraries = allregions.remove(null)
         if (unconfiguredLibraries) {
             log.warn('unconfigured libraries = {}', unconfiguredLibraries)
@@ -341,16 +351,16 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         response.meta.noninterlibrarybyregions = allregions.collectEntries { k, v ->
             [ k, v.findAll { it.map.containsKey('noninterlibraryservice') }.collect { it.isil } ]
         }.findAll { k, v -> !v.isEmpty() }
-        // global
-        List<Library> interlibrary = toPriority(markedListOfLibraries).findAll {
+
+        List<Library> interlibrary = toPriority(librariesfilteredforregion).findAll {
             it.map.containsKey('interlibraryservice')
         }
-        List<Library> noninterlibrary = markedListOfLibraries.findAll {
+        List<Library> noninterlibrary = librariesfilteredforregion.findAll {
             it.map.containsKey('noninterlibraryservice')
         }
         response.interlibrary = interlibrary.collectEntries { [ (it.isil): it.map.interlibraryservice ] }
         response.noninterlibrary = noninterlibrary.collectEntries { [ (it.isil): it.map.noninterlibraryservice ] }
-        // compact
+        // compact representation in meta
         response.meta.interlibrary = interlibrary.collect { it.isil }
         response.meta.noninterlibrary = noninterlibrary.collect { it.isil }
     }
@@ -358,7 +368,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
     private static List<Library> toPriority(List<Library> libraries) {
         List<Library> librariesByPriority = []
         Map<Boolean, List<Library>> priorities = libraries.groupBy { library ->
-                library.getMarker("priority")
+            library.getMarker("priority")
         }
         if (priorities.containsKey(true)) {
             List<Library> withPriority = priorities.remove(true)

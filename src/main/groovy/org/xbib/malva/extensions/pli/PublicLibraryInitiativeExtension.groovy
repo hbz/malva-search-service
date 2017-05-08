@@ -146,11 +146,32 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
                 .string()
     }
 
-    String formatGroup(List<Map> groups) {
-        groups.collect { formatGroup(it) }.join(',')
+    String formatLocation(Map info) {
+        List<String> list = []
+        [info.get('location')].flatten().each {
+            list.add(formatSingleLocation(it as Map))
+        }
+        list.join(', ')
     }
 
-    String formatGroup(Map group) {
+    String formatSingleLocation(Map location) {
+        String callnumber = location.get('callnumber') as String
+        String collection = location.get('collection') as String
+        String description = location.get('publicnote') as String
+        String publicnote = location.get('publicnote') as String
+        ([callnumber, collection, description, publicnote] - null).join(' ')
+    }
+
+    String formatEnumerationChronology(Map info) {
+        List<String> list = []
+        Map holdings = info.get('holdings') as Map
+        [holdings.get('group')].flatten().each {
+            list.add(formatSingleGroup(it as Map))
+        }
+        list.join(', ')
+    }
+
+    String formatSingleGroup(Map group) {
         if (group.enddate) {
             if (group.endvolume) {
                 if (group.beginvolume) {
@@ -165,19 +186,17 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
                     return "${group.begindate} - ${group.enddate}"
                 }
             }
-        } else {
-            if (group.open) {
-                if (group.beginvolume) {
-                    return "${group.beginvolume}.${group.begindate} -"
-                } else {
-                    return "${group.begindate} -"
-                }
+        } else if (group.open) {
+            if (group.beginvolume) {
+                return "${group.beginvolume}.${group.begindate} -"
             } else {
-                if (group.beginvolume) {
-                    return "${group.beginvolume}.${group.begindate}"
-                } else {
-                    return "${group.begindate}"
-                }
+                return "${group.begindate} -"
+            }
+        } else {
+            if (group.beginvolume) {
+                return "${group.beginvolume}.${group.begindate}"
+            } else {
+                return "${group.begindate}"
             }
         }
     }

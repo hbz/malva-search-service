@@ -166,8 +166,8 @@ html(lang: 'en') {
                'none': 'nicht erlaubt'
         ]
         def dists = [
-                'unrestricted': 'unbeschränkt',
                 'none': 'unbeschränkt',
+                'unrestricted': 'unbeschränkt',
                 'domestic': 'nur Inland',
                 'postal': 'nur Postversand',
                 'electronic': 'auch elektronisch an Nutzer'
