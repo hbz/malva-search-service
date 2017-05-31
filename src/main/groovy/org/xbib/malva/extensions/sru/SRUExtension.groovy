@@ -58,6 +58,10 @@ class SRUExtension implements MalvaExtension, SRUConstants {
         this
     }
 
+    Map<String,Object> execute(String path, MultiMap params) {
+        execute(path, params, true)
+    }
+
     Map<String,Object> execute(String path, MultiMap params, boolean xml) {
         // map query from multiple parameters
         String cql = params.getString("cql")
@@ -154,18 +158,14 @@ class SRUExtension implements MalvaExtension, SRUConstants {
     }
 
     static String namespace(String version) {
-        String namespace = 'http://docs.oasis-open.org/ns/search-ws/sruResponse'
-        if( version == '1.2') {
-            namespace = 'http://www.loc.gov/zing/srw/'
-        }
-        namespace
+        version == '1.2' ?
+                'http://www.loc.gov/zing/srw/' :
+                'http://docs.oasis-open.org/ns/search-ws/sruResponse'
     }
 
     static String schemaLocation(String version) {
-        String schemaLocation = 'http://docs.oasis-open.org/ns/search-ws/sruResponse http://www.loc.gov/standards/sru/sru-2-0/schemas/sruResponse.xsd'
-        if( version == '1.2') {
-            schemaLocation = 'http://www.loc.gov/zing/srw/ http://www.loc.gov/standards/sru/xmlFiles/srw-types.xsd'
-        }
-        schemaLocation
+        version == '1.2' ?
+                'http://www.loc.gov/zing/srw/ http://www.loc.gov/standards/sru/xmlFiles/srw-types.xsd' :
+                'http://docs.oasis-open.org/ns/search-ws/sruResponse http://www.loc.gov/standards/sru/sru-2-0/schemas/sruResponse.xsd'
     }
 }

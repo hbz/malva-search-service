@@ -10,6 +10,7 @@ import org.xbib.content.xml.XmlXContent
 import org.xbib.malva.MalvaBinding
 import org.xbib.malva.MalvaExtension
 import org.xbib.malva.Webapp
+import org.xbib.malva.extensions.ldap.LdapExtension
 import org.xbib.malva.extensions.pli.services.PublicLibraryInitiativeAvailService
 import org.xbib.malva.util.MultiMap
 
@@ -57,7 +58,7 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
         log.debug("params={}", params)
         String baseService = params.getString(BASE_SERVICE)
         switch (baseService) {
-            case "avail-v1":
+            case 'avail-v1':
                 String baseRegion = params.getString (BASE_REGION)
                 String baseLibrary = params.getString (BASE_LIBRARY)
                 String id = params.getString (ID)
@@ -85,6 +86,7 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
                         .build ()
                 log.info("executing avail with request ${request}")
                 return avail(request)
+            case 'search-v1':
                 break
             default:
                 break
@@ -151,10 +153,13 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
         [info.get('location')].flatten().each {
             list.add(formatSingleLocation(it as Map))
         }
-        list.join(', ')
+        (list - null).join(', ')
     }
 
     String formatSingleLocation(Map location) {
+        if (!location) {
+            return null
+        }
         String callnumber = location.get('callnumber') as String
         String collection = location.get('collection') as String
         String description = location.get('publicnote') as String
@@ -162,16 +167,66 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
         ([callnumber, collection, description, publicnote] - null).join(' ')
     }
 
+    String formatAllLinks(Map info, String carrierType, Map global) {
+        if (carrierType == 'online resource') {
+            String s = formatLinks(info)
+            if (s.length() > 0) {
+                return s
+            }
+            s = formatLinks(global)
+            if (s.length() > 0) {
+                return s
+            }
+        }
+        return ''
+    }
+
+    String formatLinks(Map info) {
+        if (!info) {
+            return ''
+        }
+        List<String> list = []
+        Map links = info.get('links') as Map
+        if (links) {
+            [links].flatten().each {
+                list.add('<i class="glyphicon glyphicon-link"></i>&nbsp;' + formatSingleLink(it as Map))
+            }
+        }
+        (list - null).join('<br/>')
+    }
+
+    String formatSingleLink(Map link) {
+        if (!link) {
+            return ''
+        }
+        String uri = link.get('uri') as String
+        String label1 = link.get('nonpublicnote') as String
+        String label2 = link.get('publicnote') as String
+        String label = label1 && label2 ? "${label1} ${label2}" : label1 ? label1 : label2
+        if (!label) {
+            label = 'Link'
+        }
+        "<a href='${uri}' target='_blank'>${label}</a>"
+    }
+
     String formatEnumerationChronology(Map info) {
+        if (!info) {
+            return null
+        }
         List<String> list = []
         Map holdings = info.get('holdings') as Map
-        [holdings.get('group')].flatten().each {
-            list.add(formatSingleGroup(it as Map))
+        if (holdings) {
+            ([holdings.get('group')] - null).flatten().each {
+                list.add(formatSingleGroup(it as Map))
+            }
         }
-        list.join(', ')
+        (list - null).join(', ')
     }
 
     String formatSingleGroup(Map group) {
+        if (!group) {
+            return null
+        }
         if (group.enddate) {
             if (group.endvolume) {
                 if (group.beginvolume) {
@@ -199,5 +254,24 @@ class PublicLibraryInitiativeExtension implements MalvaExtension, PublicLibraryI
                 return "${group.begindate}"
             }
         }
+    }
+
+    String formatLicense(Map info) {
+        if (!info) {
+            return null
+        }
+        List<String> list = []
+        Map license = info.get('license') as Map
+        if (license) {
+            ([license] - null).flatten().each { k, v ->
+                list.add(formatSingleLicense(k, v))
+            }
+        }
+        (list - null).join('<br/>')
+    }
+
+
+    String formatSingleLicense(String key,  Object value) {
+        "${key} -> ${value}"
     }
 }

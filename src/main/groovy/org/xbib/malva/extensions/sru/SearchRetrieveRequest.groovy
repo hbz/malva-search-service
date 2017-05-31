@@ -165,15 +165,6 @@ class SearchRetrieveRequest {
 
     String defaultStylesheet
 
-    String boostField
-
-    String boostModifier
-
-    Float boostFactor
-
-    String boostMode
-
-
     SearchRetrieveRequest validate() {
         this.generator = new ElasticsearchQueryGenerator()
 

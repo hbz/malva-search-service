@@ -12,6 +12,8 @@ interface PublicLibraryInitiativeParameters {
 
     String ISSN = "issn"
 
+    String ISBN = "isbn"
+
     String YEAR = "year"
 
     String REGION = "region"

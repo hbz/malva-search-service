@@ -69,8 +69,9 @@ class SRUService implements MalvaConstants {
         this.transformerFactory = createTransformerFactory(settings) as SAXTransformerFactory
     }
 
-    Map<String,Object> searchRetrieve(String index, SearchRetrieveRequest searchRetrieveRequest, boolean xml) throws Exception {
-        searchRetrieve(index, searchRetrieveRequest, null, xml)
+    Map<String,Object> searchRetrieve(String endpoint, SearchRetrieveRequest searchRetrieveRequest, boolean xml)
+            throws Exception {
+        searchRetrieve(endpoint, searchRetrieveRequest, contentBuilder(), xml)
     }
 
     Map<String,Object> searchRetrieve(String endpoint,
@@ -110,9 +111,6 @@ class SRUService implements MalvaConstants {
                 .field("took", searchResponse.tookInMillis)
                 .endObject()
         log.info("{}", logmsg.string())
-        if (builder == null) {
-            builder = contentBuilder()
-        }
         String body = buildResponse(builder, endpoint, xml,
                 searchRetrieveRequest, searchResponse, "identifier", endpoint)
         JsonXContent.jsonContent().createParser(body).mapOrderedAndClose()
@@ -153,8 +151,7 @@ class SRUService implements MalvaConstants {
                     fetchRelatedDocs(xmlParams, xmlBuilder, xml, logmsgs, index, hit.getIndex(), relatedIndex, hit.getId(), key, values)
                     xmlBuilder.endObject()
                     builder.field("recorddata", request.getStylesheet() == null ? xmlBuilder.string() :
-                            transform(request.getStylesheet(), request.getDefaultStylesheet(), xmlBuilder.string())
-                    )
+                            transform(request.getStylesheet(), request.getDefaultStylesheet(), xmlBuilder.string()))
                 } else {
                     builder.startObject("recorddata")
                     builder.startObject("source")

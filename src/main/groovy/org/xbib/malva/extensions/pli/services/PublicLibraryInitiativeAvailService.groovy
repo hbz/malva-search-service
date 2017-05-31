@@ -24,17 +24,23 @@ import org.elasticsearch.search.sort.SortBuilders
 import org.xbib.content.settings.Settings
 import org.xbib.malva.Webapp
 import org.xbib.malva.extensions.elasticsearch.ElasticsearchExtension
+import org.xbib.malva.extensions.ldap.LdapExtension
 import org.xbib.malva.extensions.pli.PublicLibraryInitiativeParameters
 import org.xbib.malva.extensions.pli.PublicLibraryInitiativeRequest
 import org.xbib.malva.extensions.pli.PublicLibraryInitiativeResponse
 import org.xbib.malva.extensions.pli.entities.Library
 import org.xbib.malva.extensions.pli.entities.Service
+import org.xbib.malva.security.profile.UserProfile
 import org.xbib.malva.util.MultiMap
+
+import javax.naming.NameNotFoundException
 
 @Log4j2
 class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativeParameters {
 
     Settings settings
+
+    LdapExtension ldapExtension
 
     ElasticsearchClient client
 
@@ -88,18 +94,26 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
 
     List<String> withoutDistribution
 
+    List<String> withLdapGroups
+
+    List<String> withoutLdapGroups
+
     PublicLibraryInitiativeAvailService(Settings settings, Webapp webapp) {
         this.settings = settings
         ElasticsearchExtension elasticsearchExtension = webapp.extensions().get('elasticsearch') as ElasticsearchExtension
         this.client = elasticsearchExtension.elasticsearchService.resources.get(webapp).client
-        String defaultIndex = "efl"
-        this.manifestationsIndex = settings.get("manifestations.index", defaultIndex)
+        LdapExtension ldapExtension = webapp.extensions().get('ldap') as LdapExtension
+        this.ldapExtension = ldapExtension
+        if (!ldapExtension) {
+            log.warn('PLI: LDAP extension not present, library state check disabled')
+        }
+        this.manifestationsIndex = settings.get("manifestations.index", "fixm")
         this.manifestationsType = settings.get("manifestations.type", "manifestations")
-        this.partsIndex = settings.get("manifestations.index", defaultIndex)
-        this.partsType = settings.get("manifestations.type", "parts")
-        this.holdingsIndex = settings.get("holdings.index", defaultIndex)
+        this.partsIndex = settings.get("parts.index", "fixp")
+        this.partsType = settings.get("parts.type", "parts")
+        this.holdingsIndex = settings.get("holdings.index", "fixh")
         this.holdingsType = settings.get("holdings.type", "holdings")
-        this.servicesIndex = settings.get("services.index", defaultIndex)
+        this.servicesIndex = settings.get("services.index", "fixs")
         this.servicesType = settings.get("services.type", "services")
         this.scrollMillis = settings.getAsTime("scrolltimeout",
                 org.xbib.content.util.unit.TimeValue.timeValueSeconds(60)).millis()
@@ -108,6 +122,8 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         regionSettings.asMap.keySet().eachWithIndex { entry, i ->
             regionOrder.put(entry, i)
         }
+        this.withLdapGroups = settings.getAsArray("with_ldap_group") as List<String>
+        this.withoutLdapGroups = settings.getAsArray("without_ldap_group") as List<String>
     }
 
     PublicLibraryInitiativeResponse avail(PublicLibraryInitiativeRequest request) {
@@ -131,8 +147,8 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
             if (source.containsKey("openaccess")) {
                 response.meta.put("openaccess", source.get("openaccess"))
             }
-            if (source.containsKey("links")) {
-                response.meta.put("links", source.get("links"))
+            if (source.containsKey('links')) {
+                response.meta.put('links', source.get('links'))
             }
         }
         if (!isInManifestations) {
@@ -159,7 +175,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                 if (dateQuery) {
                     queryBuilder = queryBuilder.must(dateQuery)
                 }
-                fetchServicesFrom(partsIndex, partsType, queryBuilder, multiMap)
+                fetchServicesFrom(partsIndex, partsType, queryBuilder, response, multiMap)
                 toResult(request, response, toLibraries(multiMap))
             }
         } else if (request.year && request.year > 0) {
@@ -179,6 +195,11 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                         .setId(holdingsId)
                 getResponse = getRequestBuilder.execute().actionGet()
                 if (getResponse.isExists()) {
+                    Map<String, Object> source = getResponse.source
+                    // holdings links are copied from parent manifestation(s)
+                    if (source.containsKey('links')) {
+                        response.meta.put('links', source.get('links'))
+                    }
                     List<String> servicesIds = getResponse.source.get("service") as List
                     toServices(servicesIds, multiMap)
                     toResult(request, response, toLibraries(multiMap))
@@ -187,14 +208,14 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         } else {
             // search for holdings
             QueryBuilder queryBuilder = QueryBuilders.matchQuery("parent", request.id)
-            fetchServicesFrom(holdingsIndex, holdingsType, queryBuilder, multiMap)
+            fetchServicesFrom(holdingsIndex, holdingsType, queryBuilder, response, multiMap)
             toResult(request, response, toLibraries(multiMap))
         }
         response
     }
 
     private void fetchServicesFrom(String index, String type, QueryBuilder queryBuilder,
-                                   MultiMap multiMap) {
+                                   PublicLibraryInitiativeResponse response, MultiMap multiMap) {
         SearchRequestBuilder searchRequest = new SearchRequestBuilder(client, SearchAction.INSTANCE)
                 .setIndices(index)
                 .setTypes(type)
@@ -203,9 +224,14 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                 .setSize(10)
                 .addSort(SortBuilders.fieldSort("_doc"))
         SearchResponse searchResponse = searchRequest.execute().actionGet()
+        List links = []
         while (searchResponse.hits.hits.length > 0) {
             for (SearchHit hit : searchResponse.hits) {
-                List<String> serviceIDs = hit.source.get("service") as List
+                Map<String, Object> source = hit.source
+                if (source.containsKey('links')) {
+                    links << source.get('links')
+                }
+                List<String> serviceIDs = source.get("service") as List
                 toServices(serviceIDs, multiMap)
             }
             searchResponse = new SearchScrollRequestBuilder(client, SearchScrollAction.INSTANCE,
@@ -217,28 +243,9 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                 ClearScrollAction.INSTANCE)
                 .addScrollId(searchResponse.getScrollId())
         clearScrollRequestBuilder.execute().actionGet()
-    }
-
-    private List<Library> toLibraries(MultiMap<String, Map<String, Object>> map) {
-        List<Library> libraries = []
-        if (!map) {
-            return libraries
+        if (!response.meta.containsKey('links')) {
+            response.meta.put('links', links)
         }
-        map.keySet().each { isil ->
-            Library.Builder builder = new Library.Builder()
-            builder.regionOrder(regionOrder)
-            builder.isil(isil)
-            if (formatByLibrary) {
-                formatByLibrary.get(isil)?.each { format ->
-                    builder.format(format)
-                }
-            }
-            map.getAll(isil).each { Map<String, Object> service ->
-                builder.service(service.get('_id') as String, service)
-            }
-            libraries.add(builder.build())
-        }
-        libraries
     }
 
     private void toResult(PublicLibraryInitiativeRequest request,
@@ -285,12 +292,13 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         withoutDistribution = request.distribution ? request.distribution.findAll { it.startsWith(('-')) }
                 .collect { it.substring(1) } :
                 settings.getAsArray("without_distribution") as List<String>
+
         List<Library> filteredListOfLibraries = listOfLibraries.findAll { library ->
             includeLibrary(library) && excludeLibrary(library)
         }
         filteredListOfLibraries = filteredListOfLibraries.findAll { library ->
             int numberOfServicesBeforeFilter = library.interlibraryServices.size()
-            List<Service> filteredInterlibraryServices = library.interlibraryServices.findAll { service ->
+            Collection<Service> filteredInterlibraryServices = library.interlibraryServices.findAll { service ->
                 includeCarrierType(service) && excludeCarrierType(service) &&
                         includeCarrierType(library, service) && excludeCarrierType(library, service) &&
                         includeLibrary(service) && excludeLibrary(service) &&
@@ -306,7 +314,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
             Set<Service> diff = new HashSet<>()
             diff.addAll(library.interlibraryServices)
             diff.removeAll(filteredInterlibraryServices)
-            List<Service> nonInterlibraryServices = library.nonInterlibraryServices
+            Collection<Service> nonInterlibraryServices = library.nonInterlibraryServices
             if (!diff.isEmpty()) {
                 nonInterlibraryServices.addAll(diff)
             }
@@ -321,7 +329,7 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
         }
         List<Library> librariesfilteredforregion = filteredListOfLibraries.findAll { library ->
             int numberOfServicesBeforeFilter = library.interlibraryServices.size()
-            List<Service> filteredInterlibraryServices = library.interlibraryServices.findAll { service ->
+            Collection<Service> filteredInterlibraryServices = library.interlibraryServices.findAll { service ->
                 includeRegion(service) && excludeRegion(service)
             }
             // remove library if their services were all removed
@@ -346,48 +354,102 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
             log.warn('unconfigured libraries = {}', unconfiguredLibraries)
         }
         response.meta.interlibrarybyregions = allregions.collectEntries { k, v ->
-            [ k, toPriority(v).findAll { it.map.containsKey('interlibraryservice') }.collect { it.isil } ]
+            [ k, v.findAll { it.map.containsKey('interlibraryservice') }.collect { it.isil } ]
         }.findAll { k, v -> !v.isEmpty() }
         response.meta.noninterlibrarybyregions = allregions.collectEntries { k, v ->
             [ k, v.findAll { it.map.containsKey('noninterlibraryservice') }.collect { it.isil } ]
         }.findAll { k, v -> !v.isEmpty() }
 
-        List<Library> interlibrary = toPriority(librariesfilteredforregion).findAll {
-            it.map.containsKey('interlibraryservice')
-        }
+        // process interlibrary results:
+        // 1. find all inter library services
+        // 2. find all active libraries
+        // 3. re-order regarding priority and limit to a maximum length
+        // 4. move rest to "more interlibrary" list
+        List<Library> interlibrary = librariesfilteredforregion.findAll { it.map.containsKey('interlibraryservice') }
+        Map<Integer, List<Library>> interlibrarybyprio = interlibrary.groupBy { library -> library.priority }
+        List<Library> limitedinterlibrary = []
+        List<Library> moreinterlibrary = []
+        // library priority 1 is most relevant for top result
+        toPriority(interlibrarybyprio.remove(1), limitedinterlibrary, moreinterlibrary)
+        // drop library priority 9 (= missing library) from being displayed
+        interlibrarybyprio.each { k, v -> if (k != 9) { moreinterlibrary.addAll(v)  } }
+        MultiMap interlibrarymap = [:]
+        limitedinterlibrary.each { m -> interlibrarymap << [ (m.isil): m.map.interlibraryservice ] }
+        response.interlibrary = interlibrarymap
+        response.meta.interlibrary = limitedinterlibrary.collect { it.isil }
+        MultiMap moreinterlibrarymap = [:]
+        moreinterlibrary.each { m -> moreinterlibrarymap << [ (m.isil): m.map.interlibraryservice ] }
+        response.moreinterlibrary = moreinterlibrarymap
+        response.meta.moreinterlibrary = moreinterlibrary.collect { it.isil }
+
+        // non-interlibrary is easier, just collect them, do not check for priority, activity, limits
         List<Library> noninterlibrary = librariesfilteredforregion.findAll {
             it.map.containsKey('noninterlibraryservice')
         }
-        response.interlibrary = interlibrary.collectEntries { [ (it.isil): it.map.interlibraryservice ] }
+        MultiMap noninterlibrarymap = [:]
+        noninterlibrary.each { m -> noninterlibrarymap << [ (m.isil): m.map.noninterlibraryservice ] }
         response.noninterlibrary = noninterlibrary.collectEntries { [ (it.isil): it.map.noninterlibraryservice ] }
-        // compact representation in meta
-        response.meta.interlibrary = interlibrary.collect { it.isil }
         response.meta.noninterlibrary = noninterlibrary.collect { it.isil }
     }
 
-    private static List<Library> toPriority(List<Library> libraries) {
-        List<Library> librariesByPriority = []
+    private void toPriority(List<Library> libraries, List<Library> limitedinterlibrary, List<Library> otherlibraries) {
+        int limit = settings.getAsInt("limit", 10)
         Map<Boolean, List<Library>> priorities = libraries.groupBy { library ->
             library.getMarker("priority")
         }
         if (priorities.containsKey(true)) {
             List<Library> withPriority = priorities.remove(true)
             withPriority.sort(new Library.PriorityRandomComparator())
-            librariesByPriority.addAll(withPriority)
+            distribute(limit, withPriority, limitedinterlibrary, otherlibraries)
             List<Library> withoutPriority = priorities.remove(false)
             if (withoutPriority) {
                 withoutPriority.sort(new Library.PriorityRandomComparator())
-                librariesByPriority.addAll(withoutPriority)
+                distribute(limit, withoutPriority, limitedinterlibrary, otherlibraries)
             }
         } else if (priorities.containsKey(false)) {
             List<Library> withoutPriority = priorities.remove(false)
             withoutPriority.sort(new Library.PriorityRandomComparator())
-            librariesByPriority.addAll(withoutPriority)
+            distribute(limit, withoutPriority, limitedinterlibrary, otherlibraries)
         }
-        librariesByPriority
     }
 
-    private void toServices(List<String> serviceIds, MultiMap<String, Map<String, Object>> multiMap) {
+    private List<Library> toLibraries(MultiMap map) {
+        List<Library> libraries = []
+        if (!map) {
+            return libraries
+        }
+        map.keySet().each { String isil ->
+            Collection services = map.getAll(isil)
+            List<String> groups = groupsOf(isil)
+            int priority
+            if (!groups || groups.isEmpty()) {
+                priority = 9
+            } else if (groups.contains('LoanOnly') || groups.contains('PassiveOnly')) {
+                priority = 8
+            } else if (groups.contains('CopyInactive')) {
+                priority = 2
+            } else {
+                priority = 1
+            }
+            Library.Builder libraryBuilder = new Library.Builder()
+            libraryBuilder.groups(groups)
+            libraryBuilder.priority(priority)
+            libraryBuilder.regionOrder(regionOrder)
+            libraryBuilder.isil(isil)
+            if (formatByLibrary) {
+                formatByLibrary.get(isil)?.each { format ->
+                    libraryBuilder.format(format)
+                }
+            }
+            services.each { Map<String, Object> serviceMap ->
+                libraryBuilder.service(serviceMap.get('_id') as String, serviceMap)
+            }
+            libraries.add(libraryBuilder.build())
+        }
+        libraries
+    }
+
+    private void toServices(List<String> serviceIds, MultiMap multiMap) {
         if (!serviceIds) {
             return
         }
@@ -406,13 +468,62 @@ class PublicLibraryInitiativeAvailService implements PublicLibraryInitiativePara
                     int pos1 = id.indexOf('(')
                     int pos2 = id.indexOf(')')
                     String isil = id.substring(pos1 + 1, pos2)
-                    multiMap.put(isil, m)
+                    multiMap << Collections.singletonMap(isil, m)
                 } else {
                     log.warn('no content for '+ multiGetItemResponse.response.id)
                 }
             } else {
                 log.warn('failed: ' + multiGetItemResponse.response.id, multiGetItemResponse.getFailure().failure)
             }
+        }
+    }
+
+    private List<String> groupsOf(String isil) {
+        List<String> groups = []
+        if (!ldapExtension) {
+            return groups
+        }
+        try {
+            UserProfile userProfile = ldapExtension.findUserProfile(isil)
+            if (!userProfile && !userProfile.roles) {
+                // library has no roles, do not accept this
+                log.error('ISIL ' + isil + ' no roles?')
+            } else {
+                groups.addAll(userProfile.roles)
+                if (withLdapGroups) {
+                    // all LDAP groups must exist as role, or the library is not valid
+                    for (String ldapGroup : withLdapGroups) {
+                        if (!checkValueInSet(ldapGroup, userProfile.roles)) {
+                            throw new IllegalStateException("group missing: ${ldapGroup}")
+                        }
+                    }
+                }
+                if (withoutLdapGroups) {
+                    // if an LDAP group exists as role, the library is not valid
+                    for (String ldapGroup : withoutLdapGroups) {
+                        if (checkValueInSet(ldapGroup, userProfile.roles)) {
+                            throw new IllegalStateException("flagged group: ${ldapGroup}")
+                        }
+                    }
+                }
+            }
+        } catch (NameNotFoundException e) {
+            log.error('ISIL ' + isil + ' LDAP error: ' + e.getMessage() as String)
+        } catch (Exception e) {
+            log.error(e.getMessage() as String, e)
+        }
+        groups
+    }
+
+    private static void distribute(int n, List input, List head, List tail) {
+        int i = 0
+        while (i < n && i < input.size()) {
+            head.add(input.get(i))
+            i++
+        }
+        while (i < input.size()) {
+            tail.add(input.get(i))
+            i++
         }
     }
 

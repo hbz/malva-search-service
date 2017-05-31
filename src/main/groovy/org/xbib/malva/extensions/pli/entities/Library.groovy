@@ -12,11 +12,13 @@ class Library implements Comparable<Library> {
 
     Region region
 
+    List<String> groups = []
+
     Set<String> format = []
 
-    List<Service> interlibraryServices = []
+    Set<Service> interlibraryServices = new TreeSet<>(new Service.PriorityComparator())
 
-    List<Service> nonInterlibraryServices = []
+    Set<Service> nonInterlibraryServices = new TreeSet(new Service.PriorityComparator())
 
     Service firstService
 
@@ -26,6 +28,16 @@ class Library implements Comparable<Library> {
 
         Builder isil(String isil) {
             library.isil = isil
+            this
+        }
+
+        Builder groups(List<String> groups) {
+            library.groups = groups
+            this
+        }
+
+        Builder priority(Integer priority) {
+            library.priority = priority
             this
         }
 
@@ -44,7 +56,9 @@ class Library implements Comparable<Library> {
             Integer regionPriority = regionOrder && regionOrder.containsKey(regionStr) ?
                     regionOrder.get(regionStr) : 0
             library.region = new Region(regionStr, regionPriority)
-            Service service = new Service(map, id, regionPriority, library.priority)
+            map.librarygroups = library.groups
+            map.librarypriority = library.priority
+            Service service = new Service(map, id, regionPriority)
             if (service.isInterLibrary()) {
                 library.interlibraryServices.add(service)
             } else {
@@ -70,7 +84,7 @@ class Library implements Comparable<Library> {
         this.format.isEmpty() || this.format.contains(format)
     }
 
-    void activateInterlibraryServices(List<Service> serviceList) {
+    void activateInterlibraryServices(Set<Service> serviceList) {
         interlibraryServices = serviceList
         if (!interlibraryServices.isEmpty()) {
             map.put("interlibraryservice", interlibraryServices.collect { it.map })
@@ -79,7 +93,7 @@ class Library implements Comparable<Library> {
                 !nonInterlibraryServices.isEmpty() ? ++nonInterlibraryServices.iterator() : Service.EMPTY
     }
 
-    void activateNonInterlibraryService(List<Service> serviceList) {
+    void activateNonInterlibraryService(Set<Service> serviceList) {
         nonInterlibraryServices = serviceList
         if (!nonInterlibraryServices.isEmpty()) {
             map.put("noninterlibraryservice", nonInterlibraryServices.collect { it.map })
@@ -108,7 +122,7 @@ class Library implements Comparable<Library> {
 
         @Override
         int compare(Library l1, Library l2) {
-            l1.firstService.priorityRandomKey <=> l2.firstService.priorityRandomKey
+            l1.firstService.key <=> l2.firstService.key
         }
     }
 }
